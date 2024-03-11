@@ -1,5 +1,9 @@
+import os
+import sys
 from typing import Callable, Tuple, List
 from moviepy.editor import *
+
+sys.path.append("../")
 from PostData import PostData
 
 

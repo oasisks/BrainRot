@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import pprint
-
 import praw
 from dotenv import load_dotenv
-import os
 import sys
-
+import os
 sys.path.append("../")
+
 from PostData import PostData, Reply
 
 
