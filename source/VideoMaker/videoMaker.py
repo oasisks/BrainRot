@@ -1,59 +1,37 @@
-from __future__ import annotations
-from typing import Callable, Tuple, List
-from dataclasses import dataclass
+from typing import Callable, Tuple
+from moviepy.editor import *
 import sys
 
 sys.path.append("../")
-from PostData import PostData, Reply
+from PostData import PostData
 
 
-#defines the data stored in the post
-@dataclass
-class PostData:
-    user: str
-    title: str
-    text: str
-    images: List[bytes]
-    replies: List[Reply]
-
-
-@dataclass
-class Reply:
-    user: str
-    parent: Reply
-    child: List[Reply]
-    content: str
-    images: List[bytes]
-
-#arguments: none (might modify this)
+#arguments: any args
 #return: PostData
 getPostCall = Callable[..., PostData]
 
 #arguments: PostData
 #return: video (in bytes), duration (in ms)
-makePostVideoCall = Callable[[PostData], Tuple[bytes, int]]
+makePostVideoCall = Callable[[PostData], Tuple[VideoClip, int]]
 
 #arguments: duration (in ms)
 #return: video (in bytes)
-makeBrainrotVideoCall = Callable[[int], bytes]
+makeBrainrotVideoCall = Callable[[int], VideoClip]
 
 #arguments: postVideo (in bytes), brainrotVideo (in bytes)
 #return: compiled video (in bytes)
-compileVideoCall = Callable[[bytes, bytes], bytes]
+compileVideoCall = Callable[[VideoClip, VideoClip], VideoClip]
 
 class VideoMaker:
     def __init__(self, getPost: getPostCall, makePostVideo: makePostVideoCall, makeBrainrotVideo: makeBrainrotVideoCall, compileVideo: compileVideoCall) -> None:
-        self.getPost = getPost
-        self.makePostVideo = makePostVideo
-        self.makeBrainrotVideo = makeBrainrotVideo
-        self.compileVideo = compileVideo
+        self._getPost = getPost
+        self._makePostVideo = makePostVideo
+        self._makeBrainrotVideo = makeBrainrotVideo
+        self._compileVideo = compileVideo
 
-    def makeVideo(self, *args) -> bytes:
-        try:
-            post = self.getPost(args)
-        except:
-            return None
-        postVideo, duration = self.makePostVideo(post)
-        brainrotVideo = self.makeBrainrotVideo(duration)
-        return self.compileVideo(postVideo, brainrotVideo)
+    def makeVideo(self, *args) -> Tuple[VideoClip, str]:
+        post = self._getPost(*args)
+        postVideo, duration = self._makePostVideo(post)
+        brainrotVideo = self._makeBrainrotVideo(duration)
+        return self._compileVideo(postVideo, brainrotVideo), post.id
 
