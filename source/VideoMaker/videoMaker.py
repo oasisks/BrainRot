@@ -1,6 +1,10 @@
 from __future__ import annotations
 from typing import Callable, Tuple, List
 from dataclasses import dataclass
+import sys
+
+sys.path.append("../")
+from PostData import PostData, Reply
 
 
 #defines the data stored in the post
