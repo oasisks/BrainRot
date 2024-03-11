@@ -47,7 +47,7 @@ class RedditPost:
                 text = submission.selftext
                 replies = self._get_comments(submission.comments)
                 id = submission.id
-                data = PostData(author, title, text, id, [], replies)
+                data = PostData(author, title, text, id, subreddit_name, [], replies)
                 return data
             except AttributeError as E:
                 print(E)
