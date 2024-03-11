@@ -2,17 +2,21 @@ from typing import List
 from PostData import PostData
 from VideoMaker.makePostVideo import MakePostVideo
 from VideoMaker.videoMaker import VideoMaker
+from VideoMaker.audioGeneration import Audio
 
 from moviepy.editor import *
 
+from dotenv import load_dotenv
+import os
+
+
+#length = 1080
+#screensize = (length, int(16 * length / 9))
 
 height = 1080
-#length = 1080
 length = int(round(height * 9 / 16, -1))
-
 screensize = (length, height)
-print(screensize)
-#screensize = (length, int(16 * length / 9))
+
 VIDEO_DIR = "final videos/"
 USERNAME = "hello"
 BREAK = 0.5
@@ -34,17 +38,16 @@ def dummyCompiler(post, brainrot):
     return CompositeVideoClip([brainrot, post], size=screensize)
 
 if __name__ == '__main__':
-    post = PostData(title = "Reddit Post Title", text = "today i learned that i could write a bunch of text and have it show on a video")
-    
-    
-
-    postMaker = MakePostVideo(dummyAudio, dummyAnal, screensize)
+    #post = PostData(title = "Reddit Post Title", text = "today i learned that i could write a bunch of text and have it show on a video")
     #postVideo, duration = postMaker.makePostVideo(post)
     #postVideo.write_videofile(VIDEO_DIR + "complete test.mp4", fps = 8)
-
+    
+    load_dotenv()
+    audioMaker = Audio(os.getenv("ELEVEN_API"), "21m00Tcm4TlvDq8ikWAM")
+    postMaker = MakePostVideo(audioMaker.generateAudio, audioMaker.analyzeAudio, screensize)
     videoMaker = VideoMaker(dummyPost, postMaker.makePostVideo, dummyBrainrotMaker, dummyCompiler)
     try:
-        clip, id = videoMaker.makeVideo("Reddit Post Title", "today i learned that i could write a bunch of text and have it show on a video", "testing")
+        clip, id = videoMaker.makeVideo("Reddit Post Title", "hello there", "testing")
         clip.write_videofile(VIDEO_DIR + USERNAME + "_" + id + ".mp4", fps = 60)
     except Exception as E: 
         print(E)
