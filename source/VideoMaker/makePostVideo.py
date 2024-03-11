@@ -4,14 +4,14 @@ from PostData import PostData
 
 
 class MakePostVideo:
-    def __init__(self, makeAudio: Callable[[str], Tuple[bytes, int]], analyzeAudio: Callable[[bytes, str], List[int]], screensize: Tuple[int, int]) -> None:
+    def __init__(self, makeAudio: Callable[[str], AudioClip], analyzeAudio: Callable[[AudioClip, str], List[int]], screensize: Tuple[int, int]) -> None:
         self._makeAudio = makeAudio
         self._analyzeAudio = analyzeAudio
         self._screensize = screensize
     
     def makePostVideo(self, post: PostData) -> Tuple[VideoClip, int]:
-        titleAudio, titleDuration = self._makeAudio(post.title)
-        textAudio, textDuration = self._makeAudio(post.text)
+        titleAudio = self._makeAudio(post.title)
+        textAudio = self._makeAudio(post.text)
         titleBreaks = self._analyzeAudio(titleAudio, post.title)
         textBreaks = self._analyzeAudio(textAudio, post.text)
 
@@ -32,4 +32,4 @@ class MakePostVideo:
         text = concatenate_videoclips(textClips)
 
         complete = concatenate_videoclips([title, text], transition=interlude)
-        return complete, titleDuration + interDuration + textDuration
+        return complete, titleAudio.duration + interDuration + textAudio.duration
