@@ -22,6 +22,7 @@ class MakePostVideo:
         titleClips = [TextClip(word, color = 'yellow', size = self._screensize, fontsize = int(self._screensize[0]/10)).set_duration(duration) 
                  for word, duration in zip(titleWords, titleBreaks)]
         title = concatenate_videoclips(titleClips)
+        title.audio = titleAudio
         
 
         interDuration = 1
@@ -30,6 +31,7 @@ class MakePostVideo:
         textClips = [TextClip(word, color = 'orange',size = self._screensize, fontsize = int(self._screensize[0]/10)).set_duration(duration) 
                  for word, duration in zip(textWords, textBreaks)]
         text = concatenate_videoclips(textClips)
+        text.audio = textAudio
 
         complete = concatenate_videoclips([title, text], transition=interlude)
         return complete, titleAudio.duration + interDuration + textAudio.duration

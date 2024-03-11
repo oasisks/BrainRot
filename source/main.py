@@ -22,9 +22,9 @@ USERNAME = "hello"
 BREAK = 0.5
 
 def dummyAudio(help: str):
-    return b'', BREAK * len(help.split(" "))
+    return VideoFileClip("brainrot videos/1_min_vid.mp4", audio=False).set_duration(BREAK * len(help.split(" ")))
 
-def dummyAnal(audio: bytes, help: str):
+def dummyAnal(audio: AudioClip, help: str):
     return [BREAK] * len(help.split(" "))
 
 def dummyPost(title, text, id):
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     
     load_dotenv()
     audioMaker = Audio(os.getenv("ELEVEN_API"), "21m00Tcm4TlvDq8ikWAM")
-    postMaker = MakePostVideo(audioMaker.generateAudio, audioMaker.analyzeAudio, screensize)
+    postMaker = MakePostVideo(audioMaker.generateAudio, dummyAnal, screensize)
     videoMaker = VideoMaker(dummyPost, postMaker.makePostVideo, dummyBrainrotMaker, dummyCompiler)
     try:
         clip, id = videoMaker.makeVideo("Reddit Post Title", "hello there", "testing")
