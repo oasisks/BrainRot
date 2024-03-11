@@ -23,7 +23,7 @@ class Reply:
 
 #arguments: none (might modify this)
 #return: PostData
-getPostCall = Callable[[], PostData]
+getPostCall = Callable[..., PostData]
 
 #arguments: PostData
 #return: video (in bytes), duration (in ms)
@@ -44,8 +44,11 @@ class VideoMaker:
         self.makeBrainrotVideo = makeBrainrotVideo
         self.compileVideo = compileVideo
 
-    def makeVideo(self) -> bytes:
-        post = self.getPost()
+    def makeVideo(self, *args) -> bytes:
+        try:
+            post = self.getPost(args)
+        except:
+            return None
         postVideo, duration = self.makePostVideo(post)
         brainrotVideo = self.makeBrainrotVideo(duration)
         return self.compileVideo(postVideo, brainrotVideo)
