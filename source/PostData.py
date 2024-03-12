@@ -10,7 +10,7 @@ class PostData:
     title: str = ""
     text: str = ""
     id: str = ""
-    subreddit: str = ""
+    source: str = ""
     images: List[bytes] = field(default_factory=lambda: [])
     replies: List[Reply] = field(default_factory=lambda: [])
     

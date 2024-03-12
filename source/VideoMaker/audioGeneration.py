@@ -8,12 +8,18 @@ import wave
 CHUNK_SIZE = 1024
 model_path = "vosk-model-small-en-us-0.15"
 
+
+#might take a write function instead of dir and user
+#func returns AudioClip
 class Audio:
-    def __init__(self, API: str, voice: str) -> None:
+    def __init__(self, API: str, voice: str, dir: str, user: str) -> None:
         self._API = API
         self._voice = voice
+        self._dir = dir
+        self._user = user
 
-    def generateAudio(self, text: str) -> AudioClip:
+    #copied from 11labs
+    def generateAudio(self, text: str, id: str) -> AudioClip:
         url = "https://api.elevenlabs.io/v1/text-to-speech/" + self._voice
 
         headers = {
@@ -31,22 +37,18 @@ class Audio:
         }
         
         response = requests.post(url, json=data, headers=headers)
-        with open('output.mp3', 'wb') as f:
+        with open(self._dir + self._user + id + '.mp3', 'wb') as f:
             for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
                 if chunk:
                     f.write(chunk)
 
-        return AudioFileClip('output.mp3')
+        return AudioFileClip(self._dir + self._user + id + '.mp3')
     
-    def analyzeAudio(self, audio: AudioClip, text: str):
-        audio.write_audiofile("helpanal.wav")
-        print("hahaha")
-        help = list(audio.to_soundarray())
-        print("yay:")
-        help = wave.open("helpanal.wav", 'r')
-        
-        waveform, _ = torchaudio.load(help)
-        print("aye")
+
+    #forced alignment
+    #WIP
+    def analyzeAudio(self, audio: AudioClip, text: str, id: str):
+        waveform, _ = torchaudio.load()
         transcript = text.split()
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

@@ -11,15 +11,15 @@ from PostData import PostData
 getPostCall = Callable[..., PostData]
 
 #arguments: PostData
-#return: video (in bytes), duration (in ms)
-makePostVideoCall = Callable[[PostData], Tuple[VideoClip, int]]
+#return: video, duration (s)
+makePostVideoCall = Callable[[PostData], VideoClip]
 
-#arguments: duration (in ms)
-#return: video (in bytes)
-makeBrainrotVideoCall = Callable[[int], VideoClip]
+#arguments: duration (s)
+#return: video
+makeBrainrotVideoCall = Callable[[], VideoClip]
 
-#arguments: postVideo (in bytes), brainrotVideo (in bytes)
-#return: compiled video (in bytes)
+#arguments: postVideo, brainrotVideo
+#return: compiled video
 compileVideoCall = Callable[[VideoClip, VideoClip], VideoClip]
 
 class VideoMaker:
@@ -31,7 +31,7 @@ class VideoMaker:
 
     def makeVideo(self, *args) -> Tuple[VideoClip, str]:
         post = self._getPost(*args)
-        postVideo, duration = self._makePostVideo(post)
-        brainrotVideo = self._makeBrainrotVideo(duration)
+        postVideo = self._makePostVideo(post)
+        brainrotVideo = self._makeBrainrotVideo()
         return self._compileVideo(postVideo, brainrotVideo), post.id
 
