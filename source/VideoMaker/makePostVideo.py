@@ -1,9 +1,6 @@
 
 from typing import Callable, Tuple, List
 from moviepy.editor import *
-import sys
-
-sys.path.append("../")
 from PostData import PostData
 
 
@@ -16,6 +13,7 @@ class MakePostVideo:
     def makePostVideo(self, post: PostData) -> VideoClip:
         #creates the file ID
         fileID = post.source + "_" + post.id
+        print(post.source)
         
         #Generates the title video
         titleVideo = self.textToVideo(post.title, fileID + "_title", "yellow")
@@ -34,8 +32,6 @@ class MakePostVideo:
     #audio file names are based on the id
     #text color is based on color
     def textToVideo(self, text: str, id: str, color: str) -> VideoClip:
-        print("text")
-        print(text)
         audio = self._makeAudio(text, id)
         words, breaks = self._analyzeAudio(text, audio)
         colors = [color if word is not None else 'transparent' for word in words]

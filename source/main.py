@@ -42,13 +42,14 @@ if __name__ == '__main__':
     pprint.pprint(post)
     audio = Audio(os.getenv("ELEVEN_API_KEY"), VOICE_ID, "temp_audio/", USERNAME)
     postMaker = MakePostVideo(audio.generateAudio, audio.analyzeAudio, screensize)
-    videoMaker = VideoMaker(post.getPost, postMaker.makePostVideo, dummyBrainrotMaker, dummyCompiler)
+    videoMaker = VideoMaker(dummyPost, postMaker.makePostVideo, dummyBrainrotMaker, dummyCompiler)
 
     #try to make the videow
     try:
+        subreddit = "pettyrevenge"
         title = "Testing Timing"
-        message = "This is a test for timing the text to speech. It should line up well."
-        clip, id = videoMaker.makeVideo("pettyrevenge")
+        message = "$200 gift éóñ !! card"
+        clip, id = videoMaker.makeVideo(title, message, "test")
         clip.write_videofile(VIDEO_DIR + USERNAME + "_" + id + ".mp4", fps = 60)
     except Exception as E: 
         raise E
