@@ -1,6 +1,7 @@
 import pymongo.mongo_client
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+from bson import ObjectId
 import os
 from dotenv import load_dotenv
 from typing import List, Dict, Any, Mapping
@@ -109,8 +110,56 @@ class DataPool:
         except Exception as e:
             return False
 
-    def add_image_to_collection(self, collection_name: str = "fs"):
-        fs = gridfs.GridFSBucket(self._db, collection_name)
+    def add_video_to_collection(self, collection_name: str = "fs",
+                                chunk_size_bytes: int = 261120,
+                                filename: str = "test",
+                                file_dir: str = "../../final_video/hello_testing.mp4") -> ObjectId:
+        """
+        Given the filename and also the directory of the video file, it will store the bytes onto the database
+
+        :param collection_name: The collection this video will exist in. If collection doesn't exist it creates one
+        :param chunk_size_bytes: the default is 255 KB
+        :param filename: The name of the file
+        :param file_dir: the directory leading to the file
+        :return: returns the Object ID of the file
+        """
+        fs = gridfs.GridFSBucket(self._db, collection_name, chunk_size_bytes)
+
+        with open(file_dir, "rb") as videoFile:
+            file_id = fs.upload_from_stream(
+                filename,
+                videoFile
+            )
+            return file_id
+
+    def delete_video_from_collection(self, file_id: ObjectId):
+        """
+        Given the file_id of the file, we will get rid of all files having the file_id
+        :param file_id: the file id
+        :return:
+        """
+        pass
+
+    def get_video_from_collection(self, collection_filter: Mapping[str, Any], collection_name: str = "fs"):
+        """
+        Given the collection_filter, it grabs all the videos matching the filter. However, if given an empty mapping,
+        it will return all videos within the Collection
+        :param collection_filter: the filter we want (see below for examples)
+        :param collection_name: the name of the collection
+        :return:
+
+        EXAMPLES:
+        ---------
+        collection_filter = {'filename': 'test'} grabs all files that has test as the filename
+        collection_filter = {} grabs all files
+        collection_filter = {'chunkSize': 261120} grabs all files with chunk sizes of 255 KB
+        """
+
+        # first we go to the file collection
+        _collection_name = f"{collection_name}.files"
+        collection = self._db[_collection_name]
+
+        return collection.find({})
 
 
 if __name__ == '__main__':
@@ -128,3 +177,8 @@ if __name__ == '__main__':
     #     field="dsad",
     #     value="dsada"
     # )
+    pool.add_video_to_collection("Videos")
+    cursor = pool.get_video_from_collection({}, "Videos")
+
+    for doc in cursor:
+        print(doc)
