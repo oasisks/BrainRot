@@ -45,11 +45,11 @@ def dummyCompiler(post: VideoClip, brainrot):
 if __name__ == '__main__':
     #create the appropriate makers
     load_dotenv()
-    audioMaker = Audio(os.getenv("ELEVEN_API_KEY"), VOICE_ID, "temp_audio/", USERNAME)
-    postMaker = MakePostVideo(audioMaker.generateAudio, dummyAnal, screensize)
+    audio = Audio(os.getenv("ELEVEN_API_KEY"), VOICE_ID, "temp_audio/", USERNAME)
+    postMaker = MakePostVideo(audio.generateAudio, audio.analyzeAudio, screensize)
     videoMaker = VideoMaker(dummyPost, postMaker.makePostVideo, dummyBrainrotMaker, dummyCompiler)
 
-    #try to make the video
+    #try to make the videow
     try:
         clip, id = videoMaker.makeVideo("Reddit Post Title", "hello there", "testing")
         clip.write_videofile(VIDEO_DIR + USERNAME + "_" + id + ".mp4", fps = 60)

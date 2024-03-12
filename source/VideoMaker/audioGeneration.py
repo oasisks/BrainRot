@@ -1,8 +1,10 @@
 
+from typing import List
 import torchaudio
 import torch
 import torchaudio.functional as F
 from elevenlabs import generate, save
+import os
 
 CHUNK_SIZE = 1024
 model_path = "vosk-model-small-en-us-0.15"
@@ -27,8 +29,8 @@ class Audio:
 
     #forced alignment
     #WIP
-    def analyzeAudio(self, text: str, filename: str):
-        waveform, _ = torchaudio.load(uri = filename)
+    def analyzeAudio(self, text: str, filename: str) -> List[float]:
+        waveform, _ = torchaudio.load(filename)
         transcript = text.split()
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -37,11 +39,9 @@ class Audio:
         with torch.inference_mode():
             emission, _ = model(waveform.to(device))
 
-
-        LABELS = bundle.get_labels(star=None)
         DICTIONARY = bundle.get_dict(star=None)
-
-        tokenized_transcript = [DICTIONARY[c] for word in transcript for c in word]
+        
+        tokenized_transcript = [DICTIONARY[c] for word in transcript for c in word.lower()]
 
         def align(emission, tokens):
             targets = torch.tensor([tokens], dtype=torch.int32, device=device)
@@ -67,5 +67,13 @@ class Audio:
 
         word_spans = unflatten(token_spans, [len(word) for word in transcript])
         print(text)
-        print(word_spans)
-        return
+
+        num_frames = emission.size(1)
+        ratio = waveform.size(1) / num_frames
+
+        starts = [int(ratio * spans[0].start) / bundle.sample_rate for spans in word_spans]
+        ends = [int(ratio * spans[-1].end) / bundle.sample_rate for spans in word_spans]
+
+        times = [end - start for start, end in zip(starts, ends)]
+        print(times)
+        return times
