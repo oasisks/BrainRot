@@ -6,8 +6,10 @@ from dotenv import load_dotenv
 import sys
 import os
 sys.path.append("../")
+sys.path.append("../DataPool/")
 
 from PostData import PostData, Reply
+from DataPool import DataPool
 
 
 class RedditPost:
@@ -23,7 +25,10 @@ class RedditPost:
             user_agent=user_agent
         )
 
-    def getPost(self, subreddit_name="", info="hot", limit=1) -> PostData:
+        self._datapool = DataPool()
+        self._collection_name = "Reddit"
+
+    def getPost(self, subreddit_name="", info="hot", limit=10) -> PostData | None:
         """
         :param info: Choose from the list of 'hot', 'new', and 'top'
         :param subreddit_name: the subreddit we are interested in
@@ -36,20 +41,41 @@ class RedditPost:
         if info not in function_type:
             raise ValueError("Incorrect info. Must be either 'hot', 'new', or 'top'")
 
+        data = None
         for submission in function_type[info](limit=limit):
-            # TODO: Add a checker to check whether the current submission already exists
-            # For now, it will return the very first submission and call it a day
-            # it is not guarantee that the author and title will remain the same
             try:
+                # we need to check for duplication
+                # the thing that differentiates post from other posts is the submission id
+
+                # meta data
                 author = submission.author.name
                 title = submission.title
                 text = submission.selftext
                 replies = self._get_comments(submission.comments)
-                id = submission.id
+                id = f"{subreddit_name}_{submission.id}"
+
+                # first check if the id already exists
+                collection = self._datapool.get_from_collection(self._collection_name, {"_id": id})
+                count = len([doc for doc in collection])
+
+                if count > 0:
+                    continue
+
+                # next if we know it does not exist, we add it to the db
+                self._datapool.add_to_collection(self._collection_name, [
+                    {
+                        "_id": id,
+                    }
+                ])
+
                 data = PostData(author, title, text, id, subreddit_name, [], replies)
                 return data
             except AttributeError as E:
-                print(E)
+                return data
+
+        # if I am here and I still haven't gotten a valid data, then we query again
+        data = self.getPost(subreddit_name, info, limit)
+        return data
 
     def _get_comments(self, comments: praw.models.comment_forest.CommentForest, parent: Reply | None = None):
         """

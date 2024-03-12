@@ -1,12 +1,11 @@
-import pymongo.mongo_client
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+from pymongo.cursor import Cursor
 from bson import ObjectId
 import os
 from dotenv import load_dotenv
 from typing import List, Dict, Any, Mapping
 import gridfs
-import pprint
 
 
 class DataPool:
@@ -54,9 +53,8 @@ class DataPool:
         collection = self._db[collection_name]
         try:
             collection.insert_many(items)
-            return True
         except Exception as e:
-            return False
+            pass
 
     def delete_from_collection(self, collection_name: str, collection_filter: Mapping[str, Any]) -> bool:
         """
@@ -85,7 +83,7 @@ class DataPool:
         except Exception as e:
             return False
 
-    def get_from_collection(self, collection_name: str, collection_filter: Mapping[str, Any]) -> bool:
+    def get_from_collection(self, collection_name: str, collection_filter: Mapping[str, Any]) -> Cursor:
         """
         Returns all items from a collection given query. You could give a collection name that does not exist, but
         that would always result in a return of 0 items because that collection name will be by default empty.
@@ -105,18 +103,17 @@ class DataPool:
         collection = self._db[collection_name]
 
         try:
-            collection.find(collection_filter)
-            return True
+            return collection.find(collection_filter)
         except Exception as e:
-            return False
+            print(e)
 
     def add_video_to_collection(self, collection_name: str = "fs",
                                 chunk_size_bytes: int = 261120,
                                 filename: str = "test",
-                                file_dir: str = "../../final_video/hello_testing.mp4") -> ObjectId:
+                                file_dir: str = "../../final_videos/hello_testing.mp4") -> ObjectId:
         """
         Given the filename and also the directory of the video file, it will store the bytes onto the database
-
+        There is an invariant where there is only one file name in the a collection at a time
         :param collection_name: The collection this video will exist in. If collection doesn't exist it creates one
         :param chunk_size_bytes: the default is 255 KB
         :param filename: The name of the file
@@ -158,8 +155,6 @@ class DataPool:
         _collection_name = f"{collection_name}.files"
         collection = self._db[_collection_name]
 
-        return collection.find({})
-
 
 if __name__ == '__main__':
     pool = DataPool()
@@ -178,6 +173,5 @@ if __name__ == '__main__':
     # )
     pool.add_video_to_collection("Videos")
     cursor = pool.get_video_from_collection({}, "Videos")
-
     for doc in cursor:
         print(doc)
