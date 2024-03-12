@@ -30,6 +30,11 @@ class Audio:
         waveform, sample_rate = torchaudio.load(filename)
         transcript = ["".join(filter(str.isalpha, word)) for word in text.split()]
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(text)
+        print(transcript)
+        print(text.split())
+        
+
 
         bundle = torchaudio.pipelines.MMS_FA
         model = bundle.get_model(with_star=False).to(device)

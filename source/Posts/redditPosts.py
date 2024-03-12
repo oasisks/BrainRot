@@ -5,11 +5,9 @@ import praw
 from dotenv import load_dotenv
 import sys
 import os
-sys.path.append("../")
-sys.path.append("../DataPool/")
 
 from PostData import PostData, Reply
-from DataPool import DataPool
+from DataPool.DataPool import DataPool
 
 
 class RedditPost:

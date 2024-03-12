@@ -34,6 +34,8 @@ class MakePostVideo:
     #audio file names are based on the id
     #text color is based on color
     def textToVideo(self, text: str, id: str, color: str) -> VideoClip:
+        print("text")
+        print(text)
         audio = self._makeAudio(text, id)
         words, breaks = self._analyzeAudio(text, audio)
         colors = [color if word is not None else 'transparent' for word in words]
