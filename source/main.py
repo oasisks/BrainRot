@@ -51,7 +51,9 @@ if __name__ == '__main__':
 
     #try to make the videow
     try:
-        clip, id = videoMaker.makeVideo("Reddit Post Title", "hello there", "testing")
+        title = "Testing Timing"
+        message = "This is a test for timing the text to speech. It should line up well."
+        clip, id = videoMaker.makeVideo(title, message, "testing")
         clip.write_videofile(VIDEO_DIR + USERNAME + "_" + id + ".mp4", fps = 60)
     except Exception as E: 
         raise E

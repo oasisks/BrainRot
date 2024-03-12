@@ -1,5 +1,5 @@
 
-from typing import List
+from typing import List, Tuple
 import torchaudio
 import torch
 import torchaudio.functional as F
@@ -29,9 +29,9 @@ class Audio:
 
     #forced alignment
     #WIP
-    def analyzeAudio(self, text: str, filename: str) -> List[float]:
-        waveform, _ = torchaudio.load(filename)
-        transcript = text.split()
+    def analyzeAudio(self, text: str, filename: str) -> Tuple[List[str], List[float]]:
+        waveform, sample_rate = torchaudio.load(filename)
+        transcript = ["".join(filter(str.isalpha, word)) for word in text.split()]
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         bundle = torchaudio.pipelines.MMS_FA
@@ -66,14 +66,29 @@ class Audio:
 
 
         word_spans = unflatten(token_spans, [len(word) for word in transcript])
-        print(text)
+        
 
         num_frames = emission.size(1)
         ratio = waveform.size(1) / num_frames
 
-        starts = [int(ratio * spans[0].start) / bundle.sample_rate for spans in word_spans]
-        ends = [int(ratio * spans[-1].end) / bundle.sample_rate for spans in word_spans]
+        starts = [int(ratio * spans[0].start) / sample_rate for spans in word_spans]
+        ends = [int(ratio * spans[-1].end) / sample_rate for spans in word_spans]
 
-        times = [end - start for start, end in zip(starts, ends)]
+        times = []
+        words = []
+        lastend = 0
+
+        for start, end, word in zip(starts, ends, text.split()):
+            words.append(None)
+            times.append(start - lastend)
+
+            words.append(word)
+            times.append(end-start)
+
+            lastend = end
+        
+        print(words)
+        print(starts)
+        print(ends)
         print(times)
-        return times
+        return words, times
