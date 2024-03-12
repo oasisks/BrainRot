@@ -1,8 +1,5 @@
 from typing import Callable, Tuple
 from moviepy.editor import *
-import sys
-
-sys.path.append("../")
 from PostData import PostData
 
 

@@ -1,9 +1,6 @@
 
 from typing import Callable, Tuple, List
 from moviepy.editor import *
-import sys
-
-sys.path.append("../")
 from PostData import PostData
 
 
@@ -16,6 +13,7 @@ class MakePostVideo:
     def makePostVideo(self, post: PostData) -> VideoClip:
         #creates the file ID
         fileID = post.source + "_" + post.id
+        print(post.source)
         
         #Generates the title video
         titleVideo = self.textToVideo(post.title, fileID + "_title", "yellow")

@@ -1,7 +1,10 @@
+import pprint
+
 from PostData import PostData
 from VideoMaker.makePostVideo import MakePostVideo
 from VideoMaker.videoMaker import VideoMaker
 from VideoMaker.audioGeneration import Audio
+from Posts.redditPosts import RedditPost
 
 from moviepy.editor import *
 
@@ -16,18 +19,8 @@ screensize = (length, height)
 #constants that can be changed
 VIDEO_DIR = "final_videos/"
 USERNAME = "hello"
-BREAK = 0.5
 VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
 
-
-#returns a dummy audiofile
-#outdated
-def dummyAudio(help: str):
-    return VideoFileClip("brainrot_videos/1_min_vid.mp4").set_duration(BREAK * len(help.split(" "))).audio
-
-#returns breaks every BREAK seconds
-def dummyAnal(help: str, filename: str):
-    return [BREAK] * len(help.split(" "))
 
 #returns a PostData with given info
 def dummyPost(title, text, id):
@@ -45,15 +38,18 @@ def dummyCompiler(post: VideoClip, brainrot):
 if __name__ == '__main__':
     #create the appropriate makers
     load_dotenv()
+    post = RedditPost()
+    pprint.pprint(post)
     audio = Audio(os.getenv("ELEVEN_API_KEY"), VOICE_ID, "temp_audio/", USERNAME)
     postMaker = MakePostVideo(audio.generateAudio, audio.analyzeAudio, screensize)
     videoMaker = VideoMaker(dummyPost, postMaker.makePostVideo, dummyBrainrotMaker, dummyCompiler)
 
     #try to make the videow
     try:
+        subreddit = "pettyrevenge"
         title = "Testing Timing"
-        message = "This is a test for timing the text to speech. It should line up well."
-        clip, id = videoMaker.makeVideo(title, message, "testing")
+        message = "$200 gift éóñ !! card"
+        clip, id = videoMaker.makeVideo(title, message, "test")
         clip.write_videofile(VIDEO_DIR + USERNAME + "_" + id + ".mp4", fps = 60)
     except Exception as E: 
         raise E
