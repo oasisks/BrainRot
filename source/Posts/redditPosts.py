@@ -3,12 +3,11 @@ from __future__ import annotations
 import pprint
 import praw
 from dotenv import load_dotenv
-import sys
 import os
 
 
-from PostData import PostData, Reply
-from DataPool.DataPool import DataPool
+from source.PostData import PostData, Reply
+from source.DataPool.DataPool import DataPool
 
 
 class RedditPost:
@@ -27,10 +26,17 @@ class RedditPost:
         self._datapool = DataPool()
         self._collection_name = "Reddit"
 
-    def getPost(self, subreddit_name="", info="hot", limit=10) -> PostData | None:
+    def getPost(self, subreddit_name="", info="hot", limit=10, after: str | None = None) -> PostData | None:
         """
+        The getPost function will indefinitely go down a subreddit until it returns a submission.
+        It does this by keeping track of the last ID the function has seen.
+
+        It is recommended to keep track of the last post received and pass that into the 'after' parameter
+
         :param info: Choose from the list of 'hot', 'new', and 'top'
         :param subreddit_name: the subreddit we are interested in
+        :param limit: The limit per request
+        :param after: A string to signify after what submission do we want to look for (i.e., t3_2md312s)
         :return: return a Post Data that contains the title, text, username, images, and replies
         The replies is a trees
         """
@@ -41,7 +47,9 @@ class RedditPost:
             raise ValueError("Incorrect info. Must be either 'hot', 'new', or 'top'")
 
         data = None
-        for submission in function_type[info](limit=limit):
+        params = {} if after is None else {"after": after}
+        most_recent_id = ""
+        for submission in function_type[info](limit=limit, params=params):
             try:
                 # we need to check for duplication
                 # the thing that differentiates post from other posts is the submission id
@@ -52,7 +60,7 @@ class RedditPost:
                 text = submission.selftext
                 replies = self._get_comments(submission.comments)
                 id = f"{subreddit_name}_{submission.id}"
-
+                most_recent_id = f"t3_{submission.id}"
                 # first check if the id already exists
                 collection = self._datapool.get_from_collection(self._collection_name, {"_id": id})
                 count = len([doc for doc in collection])
@@ -66,14 +74,13 @@ class RedditPost:
                         "_id": id,
                     }
                 ])
-
                 data = PostData(author, title, text, id, subreddit_name, [], replies)
                 return data
             except AttributeError as E:
                 return data
 
         # if I am here and I still haven't gotten a valid data, then we query again
-        data = self.getPost(subreddit_name, info, limit)
+        data = self.getPost(subreddit_name, info, limit, most_recent_id)
         return data
 
     def _get_comments(self, comments: praw.models.comment_forest.CommentForest, parent: Reply | None = None):
