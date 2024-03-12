@@ -14,7 +14,7 @@ length = int(round(height * 9 / 16, -1))
 screensize = (length, height)
 
 #constants that can be changed
-VIDEO_DIR = "final videos/"
+VIDEO_DIR = "final_videos/"
 USERNAME = "hello"
 BREAK = 0.5
 VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
@@ -23,7 +23,7 @@ VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
 #returns a dummy audiofile
 #outdated
 def dummyAudio(help: str):
-    return VideoFileClip("brainrot videos/1_min_vid.mp4").set_duration(BREAK * len(help.split(" "))).audio
+    return VideoFileClip("brainrot_videos/1_min_vid.mp4").set_duration(BREAK * len(help.split(" "))).audio
 
 #returns breaks every BREAK seconds
 def dummyAnal(help: str, filename: str):
@@ -35,7 +35,7 @@ def dummyPost(title, text, id):
 
 #returns the resized and centered brainrot video
 def dummyBrainrotMaker():
-    return VideoFileClip("brainrot videos/1_min_vid.mp4", audio=False).resize(height = screensize[1]).set_position("center")
+    return VideoFileClip("brainrot_videos/1_min_vid.mp4", audio=False).resize(height = screensize[1]).set_position("center")
 
 #placed the brainrot as background
 def dummyCompiler(post: VideoClip, brainrot):
