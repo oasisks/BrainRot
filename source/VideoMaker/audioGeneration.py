@@ -139,14 +139,14 @@ def changeWords(text: str):
     #deal with decimals
     decimals: List[str] = []
     for word in percents:
-        if re.search("[0-9]\.[0-9]", word):
-            dec = word.split(".")
-            for i, num in enumerate(dec):
-                decimals.append(num)
-                if i < len(dec) - 1:
+        dec = word.split(".")
+        for i, num in enumerate(dec):
+            decimals.append(num)
+            if i < len(dec) - 1:
+                if num.isnumeric() and dec[i+1].isnumeric():
                     decimals.append("point")
-        else:
-            decimals.append(word)
+                else:
+                    decimals.append("dot")
 
     
     #deal with numbers
