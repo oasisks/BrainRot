@@ -1,9 +1,8 @@
-import requests
-from moviepy.editor import *
+
 import torchaudio
 import torch
 import torchaudio.functional as F
-import wave
+from elevenlabs import generate, save
 
 CHUNK_SIZE = 1024
 model_path = "vosk-model-small-en-us-0.15"
@@ -11,44 +10,25 @@ model_path = "vosk-model-small-en-us-0.15"
 
 #might take a write function instead of dir and user
 #func returns AudioClip
+#discuss with hao
 class Audio:
     def __init__(self, API: str, voice: str, dir: str, user: str) -> None:
         self._API = API
         self._voice = voice
-        self._dir = dir
-        self._user = user
+        self._heading = dir + user
 
-    #copied from 11labs
-    def generateAudio(self, text: str, id: str) -> AudioClip:
-        url = "https://api.elevenlabs.io/v1/text-to-speech/" + self._voice
-
-        headers = {
-            "Accept": "audio/mpeg",
-            "Content-Type": "application/json",
-            "xi-api-key": self._API
-        }
-
-        data = {
-            "text": text,
-            "voice_settings": {
-                "stability": 0.5,
-                "similarity_boost": 0.5
-            }
-        }
-        
-        response = requests.post(url, json=data, headers=headers)
-        with open(self._dir + self._user + id + '.mp3', 'wb') as f:
-            for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
-                if chunk:
-                    f.write(chunk)
-
-        return AudioFileClip(self._dir + self._user + id + '.mp3')
+    #saves generated audio to file
+    #returns name of file
+    def generateAudio(self, text: str, filename: str) -> str:
+        generated = generate(api_key=self._API, text=text, voice=self._voice, model="eleven_multilingual_v2")
+        save(generated, self._heading + filename + '.mp3')
+        return self._heading + filename + '.mp3'
     
 
     #forced alignment
     #WIP
-    def analyzeAudio(self, audio: AudioClip, text: str, id: str):
-        waveform, _ = torchaudio.load()
+    def analyzeAudio(self, text: str, filename: str):
+        waveform, _ = torchaudio.load(uri = filename)
         transcript = text.split()
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

@@ -1,4 +1,3 @@
-from typing import List
 from PostData import PostData
 from VideoMaker.makePostVideo import MakePostVideo
 from VideoMaker.videoMaker import VideoMaker
@@ -8,10 +7,6 @@ from moviepy.editor import *
 
 from dotenv import load_dotenv
 import os
-
-
-#length = 1080
-#screensize = (length, int(16 * length / 9))
 
 #determines screensize
 height = 1080
@@ -26,11 +21,12 @@ VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
 
 
 #returns a dummy audiofile
+#outdated
 def dummyAudio(help: str):
     return VideoFileClip("brainrot videos/1_min_vid.mp4").set_duration(BREAK * len(help.split(" "))).audio
 
 #returns breaks every BREAK seconds
-def dummyAnal(audio: AudioClip, help: str):
+def dummyAnal(help: str, filename: str):
     return [BREAK] * len(help.split(" "))
 
 #returns a PostData with given info
@@ -45,10 +41,11 @@ def dummyBrainrotMaker():
 def dummyCompiler(post: VideoClip, brainrot):
     return CompositeVideoClip([brainrot, post], size=screensize).set_duration(post.duration)
 
+#main
 if __name__ == '__main__':
     #create the appropriate makers
     load_dotenv()
-    audioMaker = Audio(os.getenv("ELEVEN_API"), VOICE_ID, "temp_audio/", USERNAME)
+    audioMaker = Audio(os.getenv("ELEVEN_API_KEY"), VOICE_ID, "temp_audio/", USERNAME)
     postMaker = MakePostVideo(audioMaker.generateAudio, dummyAnal, screensize)
     videoMaker = VideoMaker(dummyPost, postMaker.makePostVideo, dummyBrainrotMaker, dummyCompiler)
 
