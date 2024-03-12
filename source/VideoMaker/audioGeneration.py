@@ -4,11 +4,6 @@ import torchaudio
 import torch
 import torchaudio.functional as F
 from elevenlabs import generate, save
-import os
-
-CHUNK_SIZE = 1024
-model_path = "vosk-model-small-en-us-0.15"
-
 
 #might take a write function instead of dir and user
 #func returns AudioClip
@@ -28,6 +23,8 @@ class Audio:
     
 
     #forced alignment
+    #copied from torch API 
+    #https://pytorch.org/audio/stable/tutorials/ctc_forced_alignment_api_tutorial.html
     #WIP
     def analyzeAudio(self, text: str, filename: str) -> Tuple[List[str], List[float]]:
         waveform, sample_rate = torchaudio.load(filename)
@@ -86,9 +83,5 @@ class Audio:
             times.append(end-start)
 
             lastend = end
-        
-        print(words)
-        print(starts)
-        print(ends)
-        print(times)
+
         return words, times
