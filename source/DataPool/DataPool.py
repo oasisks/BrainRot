@@ -124,7 +124,6 @@ class DataPool:
         :return: returns the Object ID of the file
         """
         fs = gridfs.GridFSBucket(self._db, collection_name, chunk_size_bytes)
-
         with open(file_dir, "rb") as videoFile:
             file_id = fs.upload_from_stream(
                 filename,
