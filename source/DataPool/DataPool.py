@@ -1,3 +1,5 @@
+import pprint
+
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from pymongo.cursor import Cursor
@@ -6,6 +8,7 @@ import os
 from dotenv import load_dotenv
 from typing import List, Dict, Any, Mapping
 import gridfs
+from datetime import datetime
 
 
 class DataPool:
@@ -51,10 +54,14 @@ class DataPool:
         }
         """
         collection = self._db[collection_name]
+        for item in items:
+            item['date_added'] = datetime.today().replace(microsecond=0)
+
         try:
             collection.insert_many(items)
+            return True
         except Exception as e:
-            pass
+            return False
 
     def delete_from_collection(self, collection_name: str, collection_filter: Mapping[str, Any]) -> bool:
         """
@@ -78,7 +85,6 @@ class DataPool:
         collection = self._db[collection_name]
         try:
             result = collection.delete_many(collection_filter)
-            print(f"Deleted {result.deleted_count} items.")
             return True
         except Exception as e:
             return False
@@ -97,8 +103,11 @@ class DataPool:
         get_from_collection("TEST_COLLECTION", {'_id': ObjectID("Dsadsad21edasd")})
         Goes to TEST_COLLECTION and finds any items with '_id': ObjectID(Dsadsad21edasd)
 
-        get_from_collection("TEST_COLLECTION", {"age" : {"$gt": 26}})
+        cursor = get_from_collection("TEST_COLLECTION", {"age" : {"$gt": 26}})
         Goes to TEST_COLLECTION and finds any items that has the age field and has value greater than 26.
+
+        for doc in cursor:
+            print(doc) # this grabs each entry that was queried
         """
         collection = self._db[collection_name]
 
@@ -107,13 +116,25 @@ class DataPool:
         except Exception as e:
             print(e)
 
+    def get_most_recent_entry(self, collection_name: str = "Reddit", date_key: str = "date_added") -> str:
+        """
+        Gets the most recent entry
+        :param collection_name: The collection we are looking from
+        :param date_key: the key of datetime value. By default, date_key will be date_added
+        :return: the id of the most recent entry
+        """
+        collection = self._db[collection_name]
+        cursor = collection.find({}).sort({date_key: -1})
+        recent = cursor.next()
+        return recent["_id"]
+
     def add_video_to_collection(self, collection_name: str = "fs",
                                 chunk_size_bytes: int = 261120,
                                 filename: str = "test",
                                 file_dir: str = "../../final_videos/hello_testing.mp4") -> ObjectId:
         """
         Given the filename and also the directory of the video file, it will store the bytes onto the database
-        There is an invariant where there is only one file name in the a collection at a time
+        There is an invariant where there is only one file name in the collection at a time
         :param collection_name: The collection this video will exist in. If collection doesn't exist it creates one
         :param chunk_size_bytes: the default is 255 KB
         :param filename: The name of the file
@@ -136,7 +157,7 @@ class DataPool:
         """
         pass
 
-    def get_video_from_collection(self, collection_filter: Mapping[str, Any], collection_name: str = "fs"):
+    def get_video_from_collection(self, collection_name: str, collection_filter: Mapping[str, Any]):
         """
         Given the collection_filter, it grabs all the videos matching the filter. However, if given an empty mapping,
         it will return all videos within the Collection
@@ -150,7 +171,6 @@ class DataPool:
         collection_filter = {} grabs all files
         collection_filter = {'chunkSize': 261120} grabs all files with chunk sizes of 255 KB
         """
-
         # first we go to the file collection
         _collection_name = f"{collection_name}.files"
         collection = self._db[_collection_name]
@@ -171,7 +191,13 @@ if __name__ == '__main__':
     #     field="dsad",
     #     value="dsada"
     # )
-    pool.add_video_to_collection("Videos")
-    cursor = pool.get_video_from_collection({}, "Videos")
-    for doc in cursor:
-        print(doc)
+    # pool.add_video_to_collection("Videos")
+    # cursor = pool.get_video_from_collection({}, "Videos")
+    # for doc in cursor:
+    #     print(doc)
+    # pool.get_most_recent_entry("Reddit")
+    # pool.add_to_collection("Yes", [
+    #     {"hello": "yes"},
+    #     {"hello": "no"}
+    # ])
+    print(pool.get_most_recent_entry("Reddit"))
