@@ -102,31 +102,74 @@ ones = {0: "zero", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six
 #or we just use these words
 def changeWords(text: str): 
     #get rid of unwanted letters
-    text = unidecode(text)
-    text = text.lower()
+    split = unidecode(text).split()
 
-    #deal with money
-    split = text.split()
+    #split numbers and words
+    numsplit: List[str] = []
+    isNum = False
+    for word in split:
+        curStr = ""
+        for c in word:
+            if not (c.isnumeric() ^ isNum):
+                curStr += c
+            else:
+                numsplit.append(curStr) if curStr != "" else 1
+                curStr = c
+                isNum = c.isnumeric()
+        numsplit.append(curStr)
+        
+
+    #deal with dollar
     dollars: List[str] = []
-
-    addDollar = False
     units = ["thousand", "million", "billion", "trillion"]
-    for i, word in enumerate(split):
-        #check for $
-        if re.search("[$]", word) is not None:
-            if re.search("[0-9]", word):
-                dollars.append(word[1:])
-                if i < len(split) - 1 and split[i] in units:
-                    addDollar = True
-                else:
-                    dollars.append("dollars")
-            elif len(word.replace("$", "")):
-                dollars.append(word.replace("$", ""))
-        else:
+    addDollar = False
+    for i, word in enumerate(numsplit):
+        #do nothing if no dollar
+        if re.search("[$]", word) is None:
             dollars.append(word)
-            if addDollar:
+            #dollar with units
+            if addDollar and (not i < len(split) - 1 or not split[i+1].lower() in units):
                 dollars.append("dollars")
                 addDollar = False
+            continue
+
+        #dollar with number
+        if re.search("[0-9]", word):
+            split = word.split("$")
+            print(split)
+            if len(split) == 2:
+                if split[0] == '':
+                    dollars.append(split[1])
+                else:
+                    dollars.append(split[0])
+                addDollar = True
+                continue
+
+        #other dollar
+        split = word.split("$")
+        for i, new in enumerate(split):
+            if new == '':
+                dollars.append("dollar")
+            elif i > 0 and split[i-1] != '':
+                dollars.append("dollar")
+                dollars.append(new)
+            else:
+                dollars.append(new)
+
+    #trailing unit
+    if addDollar:
+        dollars.append("dollar")
+    
+    # ~: tilde
+    # @: at
+    # #: hash
+    # %: percent
+    # ^: circumflux
+    # &: and
+    # *: asterisk
+    # +: plus
+    # =: equal sign 
+
 
     #deal with percent
     percents: List[str] = []
@@ -135,22 +178,23 @@ def changeWords(text: str):
         if re.search("%", word):
             percents.append("percent")
 
-
+    #does not account for websites
     #deal with decimals
     decimals: List[str] = []
     for word in percents:
         dec = word.split(".")
         for i, num in enumerate(dec):
             decimals.append(num)
+
+            #point for numbers, dot for words
             if i < len(dec) - 1:
                 if num.isnumeric() and dec[i+1].isnumeric():
                     decimals.append("point")
                 else:
-                    decimals.append("dot")
+                    1 #decimals.append("dot")
 
-    
+    #we do not worry about fractions
     #deal with numbers
-    #breaks with leading 0
     numbers: List[str] = []
     for word in decimals:
         numstr = word.replace(",", "")     
@@ -213,7 +257,8 @@ def changeWords(text: str):
             numbers.append(word)
                 
 
-    returner = ["".join(filter(str.isalpha, word)) for word in numbers if len("".join(filter(str.isalpha, word)))]
+    final = ["".join(filter(str.isalpha, word)) for word in numbers if len("".join(filter(str.isalpha, word)))]
+    returner = [word.lower() for word in final]
+    return returner, final
 
-    return returner
-    
+print(changeWords("mega1million"))
