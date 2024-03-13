@@ -92,9 +92,7 @@ class Audio:
         return words, times
 
 
-teens = {11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen", 15: "fifteen", 16: "sixteen", 17: "seventeen", 18: "eighteen", 19: "nineteen", 10: "ten"}
-tens = {0: "zero", 2: "twenty", 3: "thirty", 4: "forty", 5: "fifty", 6: "sixty", 7: "seventy", 8: "eighty", 9: "ninety"}
-ones = {0: "zero", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine"}
+
 
 
 #scuffed word changer
@@ -110,12 +108,12 @@ def changeWords(text: str):
     for word in split:
         curStr = ""
         for c in word:
-            if not ((c.isnumeric() or c == ".") ^ isNum):
+            if not ((c.isnumeric() or c == "." or c == "$") ^ isNum):
                 curStr += c
             else:
                 numsplit.append(curStr) if curStr != "" else 1
                 curStr = c
-                isNum = c.isnumeric()
+                isNum = (c.isnumeric() or c == "." or c == "$")
         numsplit.append(curStr)
         
 
@@ -156,13 +154,13 @@ def changeWords(text: str):
             else:
                 dollars.append(new)
 
-    #trailing unit
+    #trailing dollar
     if addDollar:
         dollars.append("dollar")
         
         
     #deal with symbols
-    # does not account for math equations
+    #does not account for math equations
     symbols = {"~": "tilde", "@": "at", "#": "hash", "%": "percent", "^": "circumflux", "&": "and", "*": "asterisk", "+": "plus", "=": "equal sign"}
     sym: List[str] = []
     for word in dollars:
@@ -192,8 +190,9 @@ def changeWords(text: str):
         for new in curWords:
             sym.append(new)
 
-    #does not account for websites
+    
     #deal with decimals
+    #does not account for websites
     decimals: List[str] = []
     for word in sym:
         dec = word.split(".")
@@ -206,72 +205,110 @@ def changeWords(text: str):
                     decimals.append("point")
 
 
-    #does not account for fractions
+    
     #deal with numbers
+    #does not account for fractions
+
+    #dictionaries for converting numbers to strings       
+    teens = {"11": "eleven", "12": "twelve", "13": "thirteen", "14": "fourteen", "15": "fifteen", "16": "sixteen", "17": "seventeen", "18": "eighteen", "19": "nineteen", "10": "ten"}
+    tens = {"0": "zero", "2": "twenty", "3": "thirty", "4": "forty", "5": "fifty", "6": "sixty", "7": "seventy", "8": "eighty", "9": "ninety"}
+    ones = {"0": "zero", "1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "nine"}
+                    
+    #converts 2 digit numbers to words
+    def readTeen(numstr: str):
+        if len(numstr) == 1:
+            return [ones[numstr]]
+        if numstr[:1] == "1":
+            return [teens[numstr]]
+        if numstr[:1] == "0":
+            return [ones[numstr[1]]]
+        return [tens[numstr[0]], ones[numstr[1]]]
+    
+    #convers 3 digit numbers to words
+    def readThree(numstr: str):
+        words = []
+        if len(numstr) != 3:
+            return readTeen(numstr)
+        if numstr[0] != "0":
+            words.append(ones[numstr[0]])
+        for word in readTeen(numstr[1:]):
+            words.append(word)
+        return words
+
     numbers: List[str] = []
     for word in decimals:
-        numstr = word.replace(",", "")     
-        if numstr.isnumeric():
-            num = int(numstr)
-            size = len(numstr)
-            if size % 3 == 1:
-                first = int(numstr[:1])
-                if size == 1:
-                    numbers.append(ones[int(numstr)])
-                    continue
-                if first == 1:
-                    numbers.append(teens[int(numstr[:2])])
-                else:
-                    numbers.append(tens[first])
-                    numbers.append(ones[int(numstr[1:2])])
-                
-                if size > 3 and size < 15:
-                    numbers.append(units[int(size/3) - 1])
-
-
-                second = int(numstr[2:3])
-                if int(numstr[2:4]) == 0:
-                    pass
-                
-                elif second == 1:
-                    numbers.append(teens[int(numstr[2:4])])
-                else:
-                    numbers.append(tens[second])
-                    numbers.append(ones[int(numstr[3:4])])
-            if size % 3 == 2:
-                first = int(numstr[:1])
-                if first == 1:
-                    numbers.append(teens[int(numstr[:2])])
-                else:
-                    numbers.append(tens[first])
-                    numbers.append(ones[int(numstr[1:2])])
-                
-                if size > 3 and size < 15:
-                    numbers.append(units[int(size/3) - 1])
-            
-            if size % 3 == 0:
-                numbers.append(ones[int(numstr[:1])])
-                if int(numstr[:1]) != 0:
-                    numbers.append("hundred")
-
-                first = int(numstr[1:2])
-                if int(numstr[1:3]) == 0 and int(numstr[:1]) != 0:
-                    pass
-                elif first == 1:
-                    numbers.append(teens[int(numstr[1:3])])
-                else:
-                    if int(numstr[1:2]) != 0:
-                        numbers.append(tens[first])
-                    numbers.append(ones[int(numstr[2:3])])
-                
-                if size > 3 and size < 15:
-                    numbers.append(units[int(size/3) - 1])
-        else:
+        #not a number
+        if not word.replace(",", "").isnumeric():
             numbers.append(word)
-                
+            continue
+
+        #number without comma
+        if word.isnumeric():
+            numstr = word
+            size = len(word)
+
+            #read digit by digit
+            if size > 4 or numstr[0] == "0":
+                for c in numstr:
+                    numbers.append(ones[c])
+
+            #number like 2024
+            elif size == 4 and int(numstr[0]) < 3:
+                for num in readTeen(numstr[:2]):
+                    numbers.append(num)
+                for num in readTeen(numstr[2:]):
+                    numbers.append(num)
+
+            #number like 8094
+            elif size == 4:
+                numbers.append(ones[numstr[0]])
+                numbers.append("thousand")
+                for num in readThree(numstr[1:]):
+                    numbers.append(num)
+            else:
+                for num in readThree(numstr):
+                    numbers.append(num)
+            continue
+
+        #number with comma  
+        #gather unit info
+        numsplit = word.split(",")
+
+        numsplit.reverse()
+        numstr = []
+        unitIndex = []
+
+        size = 0
+        for num in numsplit:
+            if num == '':
+                size = 0
+                continue
+            if len(num) > 3:
+                size = -1
+            numstr.append(num)
+            unitIndex.append(size)
+            size += 1
+            if len(num) < 3:
+                size = 0
+
+        #correct order
+        numstr.reverse()
+        unitIndex.reverse()
+
+        #get words
+        for num, index in zip(numstr, unitIndex):
+            #read every digit
+            if index == -1:
+                for c in num:
+                    numbers.append(ones[c])
+                continue
+
+            for numWord in readThree(num):
+                numbers.append(numWord)
+            if index > 0 and index < 5:
+                numbers.append(units[index - 1])
+               
 
     final = ["".join(filter(str.isalpha, word)) for word in numbers if len("".join(filter(str.isalpha, word)))]
     returner = [word.lower() for word in final]
     return returner, final
-
-print(changeWords("1.3"))
