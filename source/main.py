@@ -35,20 +35,23 @@ def dummyCompiler(post: VideoClip, brainrot):
 
 #main
 if __name__ == '__main__':
-    #create the appropriate makers
+    #test variables
+    subreddit = "pettyrevenge"
+    title = "Testing Timing"
+    message = "$200 gift éóñ !! card"
+
+    #get necessary information
     load_dotenv()
     post = RedditPost()
     dataPool = DataPool()
-
     audio = Audio(os.getenv("ELEVEN_API_KEY"), VOICE_ID, "temp_audio/", USERNAME)
+
+    #create the appropriate makers
     postMaker = MakePostVideo(audio.generateAudio, audio.analyzeAudio, screensize)
     videoMaker = VideoMaker(post.getPost, postMaker.makePostVideo, dummyBrainrotMaker, dummyCompiler)
 
     #try to make the video
     try:
-        subreddit = "pettyrevenge"
-        title = "Testing Timing"
-        message = "$200 gift éóñ !! card"
         clip, id = videoMaker.makeVideo(subreddit, str(dataPool.getMostRecentEntry().__id))
         clip.write_videofile(VIDEO_DIR + USERNAME + "_" + id + ".mp4", fps = 60)
     except Exception as E: 

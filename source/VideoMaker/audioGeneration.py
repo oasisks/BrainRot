@@ -30,7 +30,8 @@ class Audio:
     #WIP
     def analyzeAudio(self, text: str, filename: str) -> Tuple[List[str], List[float]]:
         waveform, sample_rate = torchaudio.load(filename)
-        transcript = changeWords(text)
+        final = changeWords(text)
+        transcript = [word.lower() for word in final]
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
 
@@ -96,7 +97,9 @@ class Audio:
 
 
 #changes the text into a usable transcript
-def changeWords(text: str): 
+#takes text
+#returns the transcript that can be visibly used
+def changeWords(text: str) -> List[str]: 
     #attempts to convert characters to a-Z
     split = unidecode(text).split()
 
@@ -213,7 +216,7 @@ def changeWords(text: str):
     ones = {"0": "zero", "1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "nine"}
                     
     #converts 2 digit numbers to words
-    def readTeen(numstr: str):
+    def readTeen(numstr: str) -> List[str]:
         if len(numstr) == 1:
             return [ones[numstr]]
         if numstr[:1] == "1":
@@ -223,8 +226,8 @@ def changeWords(text: str):
         return [tens[numstr[0]], ones[numstr[1]]]
     
     #convers 3 digit numbers to words
-    def readThree(numstr: str):
-        words = []
+    def readThree(numstr: str) -> List[str]:
+        words: List[str] = []
         if len(numstr) != 3:
             return readTeen(numstr)
         if numstr[0] != "0":
@@ -306,7 +309,5 @@ def changeWords(text: str):
             if index > 0 and index < 5:
                 numbers.append(units[index - 1])
                
-
-    final = ["".join(filter(str.isalpha, word)) for word in numbers if len("".join(filter(str.isalpha, word)))]
-    returner = [word.lower() for word in final]
-    return returner, final
+    #forces all other characters out
+    return ["".join(filter(str.isalpha, word)) for word in numbers if len("".join(filter(str.isalpha, word)))]

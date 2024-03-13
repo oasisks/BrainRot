@@ -1,4 +1,3 @@
-
 from typing import Callable, Tuple, List
 from moviepy.editor import *
 from PostData import PostData
@@ -32,12 +31,23 @@ class MakePostVideo:
     #audio file names are based on the id
     #text color is based on color
     def textToVideo(self, text: str, id: str, color: str) -> VideoClip:
+        #get and analyze audio
         audio = self._makeAudio(text, id)
         words, breaks = self._analyzeAudio(text, audio)
+
+        #get words and colors
         colors = [color if word is not None else 'transparent' for word in words]
         words = [word if word is not None else 'a' for word in words]
+
+        #get clips and transform them
         clips = [TextClip(word, color = color,size = self._screensize, fontsize = int(self._screensize[0]/10)).set_duration(duration) 
                  for word, duration, color in zip(words, breaks, colors)]
+        clips = [transformTextClip(clip) for clip in clips]
+
+        #put together clips and audip
         clip = concatenate_videoclips(clips)
         clip.audio = AudioFileClip(audio)
         return clip
+
+def transformTextClip(clip: TextClip) -> VideoClip:
+    return clip
