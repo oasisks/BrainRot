@@ -110,7 +110,7 @@ def changeWords(text: str):
     for word in split:
         curStr = ""
         for c in word:
-            if not (c.isnumeric() ^ isNum):
+            if not ((c.isnumeric() or c == ".") ^ isNum):
                 curStr += c
             else:
                 numsplit.append(curStr) if curStr != "" else 1
@@ -159,41 +159,54 @@ def changeWords(text: str):
     #trailing unit
     if addDollar:
         dollars.append("dollar")
-    
-    # ~: tilde
-    # @: at
-    # #: hash
-    # %: percent
-    # ^: circumflux
-    # &: and
-    # *: asterisk
-    # +: plus
-    # =: equal sign 
-
-
-    #deal with percent
-    percents: List[str] = []
+        
+        
+    #deal with symbols
+    # does not account for math equations
+    symbols = {"~": "tilde", "@": "at", "#": "hash", "%": "percent", "^": "circumflux", "&": "and", "*": "asterisk", "+": "plus", "=": "equal sign"}
+    sym: List[str] = []
     for word in dollars:
-        percents.append(word.replace("%", "")) if len(word.replace("%", "")) else 1
-        if re.search("%", word):
-            percents.append("percent")
+        #split word for each symbol
+        curWords = [word]
+        for symbol, replace in symbols.items():
+            newWords = []
+            for cur in curWords:
+                #if sole replacement
+                if cur == symbol:
+                    newWords.append(replace)
+                    continue
+                
+                #add correct replacement
+                split = cur.split(symbol)
+                for i, new in enumerate(split):
+                    if new == '':
+                        newWords.append(replace)
+                    elif i > 0 and split[i-1] != '':
+                        newWords.append(replace)
+                        newWords.append(new)
+                    else:
+                        newWords.append(new)
+            curWords = newWords
+        
+        #add split words into list
+        for new in curWords:
+            sym.append(new)
 
     #does not account for websites
     #deal with decimals
     decimals: List[str] = []
-    for word in percents:
+    for word in sym:
         dec = word.split(".")
         for i, num in enumerate(dec):
             decimals.append(num)
 
-            #point for numbers, dot for words
+            #point for numbers
             if i < len(dec) - 1:
                 if num.isnumeric() and dec[i+1].isnumeric():
                     decimals.append("point")
-                else:
-                    1 #decimals.append("dot")
 
-    #we do not worry about fractions
+
+    #does not account for fractions
     #deal with numbers
     numbers: List[str] = []
     for word in decimals:
@@ -261,4 +274,4 @@ def changeWords(text: str):
     returner = [word.lower() for word in final]
     return returner, final
 
-print(changeWords("mega1million"))
+print(changeWords("1.3"))
