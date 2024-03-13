@@ -95,11 +95,9 @@ class Audio:
 
 
 
-#scuffed word changer
-#need to figure out how to reserve word length
-#or we just use these words
+#changes the text into a usable transcript
 def changeWords(text: str): 
-    #get rid of unwanted letters
+    #attempts to convert characters to a-Z
     split = unidecode(text).split()
 
     #split numbers and words
