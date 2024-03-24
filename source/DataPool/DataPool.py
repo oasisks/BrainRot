@@ -130,8 +130,8 @@ class DataPool:
 
     def add_video_to_collection(self, collection_name: str = "fs",
                                 chunk_size_bytes: int = 261120,
-                                filename: str = "test",
-                                file_dir: str = "../../final_videos/hello_testing.mp4") -> ObjectId:
+                                filename: str | None = None,
+                                file_dir: str | None = None) -> ObjectId:
         """
         Given the filename and also the directory of the video file, it will store the bytes onto the database
         There is an invariant where there is only one file name in the collection at a time
@@ -139,8 +139,11 @@ class DataPool:
         :param chunk_size_bytes: the default is 255 KB
         :param filename: The name of the file
         :param file_dir: the directory leading to the file
-        :return: returns the Object ID of the file
+        :return: returns the Object ID of the file. If no filename and file_dir given, then an error will be produced
         """
+        if filename is None or file_dir is None:
+            raise ValueError("No filename or file directory was given")
+
         fs = gridfs.GridFSBucket(self._db, collection_name, chunk_size_bytes)
         with open(file_dir, "rb") as videoFile:
             file_id = fs.upload_from_stream(
@@ -157,23 +160,43 @@ class DataPool:
         """
         pass
 
-    def get_video_from_collection(self, collection_name: str, collection_filter: Mapping[str, Any]):
+    def get_video_from_collection(self, collection_name: str,
+                                  collection_filter: Mapping[str, Any],
+                                  chunk_size_bytes: int = 261120) -> List[Mapping[str, bytes]]:
         """
         Given the collection_filter, it grabs all the videos matching the filter. However, if given an empty mapping,
         it will return all videos within the Collection
         :param collection_filter: the filter we want (see below for examples)
         :param collection_name: the name of the collection
-        :return:
+        :param chunk_size_bytes: the size of the bytes in bits
+        :return: returns a list of contents representing each file content
 
         EXAMPLES:
         ---------
         collection_filter = {'filename': 'test'} grabs all files that has test as the filename
         collection_filter = {} grabs all files
         collection_filter = {'chunkSize': 261120} grabs all files with chunk sizes of 255 KB
+        collection_filter = {"_id": file_id} where file_id is a BSON object ID
         """
         # first we go to the file collection
         _collection_name = f"{collection_name}.files"
         collection = self._db[_collection_name]
+
+        cursor = collection.find(collection_filter)
+        fs = gridfs.GridFSBucket(self._db, collection_name, chunk_size_bytes)
+
+        file_contents = []
+        # iterate through all the cursor and return the file streams
+        for document in cursor:
+            _id = document["_id"]
+            filename = document["filename"]
+            file = open("temp", "wb+")
+            fs.download_to_stream(_id, file)
+            file.seek(0)
+            file_contents.append({filename: file.read()})
+            file.close()
+        os.remove("temp")
+        return file_contents
 
 
 if __name__ == '__main__':
@@ -200,4 +223,20 @@ if __name__ == '__main__':
     #     {"hello": "yes"},
     #     {"hello": "no"}
     # ])
-    print(pool.get_most_recent_entry("Reddit"))
+    # collection_name = "hello_testing"
+    # filename = "test"
+    # file_dir = "../../final_videos/hello_testing.mp4"
+    # file_id = pool.add_video_to_collection(collection_name=collection_name, filename=filename, file_dir=file_dir)
+    #
+    # print(file_id)
+    # print(type(file_id))
+
+    # file_contents = pool.get_video_from_collection(collection_name, {})
+    #
+    # for index, content in enumerate(file_contents):
+    #     filename = f"file_{index}.mp4"
+    #     file = open(filename, "wb+")
+    #     file.write(content)
+    #     file.close()
+
+
