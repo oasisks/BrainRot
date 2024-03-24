@@ -130,19 +130,25 @@ class DataPool:
 
     def add_video_to_collection(self, collection_name: str = "fs",
                                 chunk_size_bytes: int = 261120,
-                                filename: str | None = None,
                                 file_dir: str | None = None) -> ObjectId:
         """
         Given the filename and also the directory of the video file, it will store the bytes onto the database
         There is an invariant where there is only one file name in the collection at a time
         :param collection_name: The collection this video will exist in. If collection doesn't exist it creates one
         :param chunk_size_bytes: the default is 255 KB
-        :param filename: The name of the file
         :param file_dir: the directory leading to the file
         :return: returns the Object ID of the file. If no filename and file_dir given, then an error will be produced
         """
-        if filename is None or file_dir is None:
-            raise ValueError("No filename or file directory was given")
+        if file_dir is None:
+            raise ValueError("No file directory was given")
+
+        filename = os.path.basename(file_dir)
+        # grab all the files
+        cursor = self.get_files_from_collection(collection_name, {})
+
+        for document in cursor:
+            if filename == document["filename"]:
+                raise ValueError(f"{filename} already exists in the collection")
 
         fs = gridfs.GridFSBucket(self._db, collection_name, chunk_size_bytes)
         with open(file_dir, "rb") as videoFile:
@@ -152,23 +158,38 @@ class DataPool:
             )
             return file_id
 
-    def delete_video_from_collection(self, file_id: ObjectId):
+    def delete_video_from_collection(self, collection_name: str, file_id: ObjectId) -> None:
         """
         Given the file_id of the file, we will get rid of all files having the file_id
+        :param collection_name: the collection we are deleting from
         :param file_id: the file id
         :return:
         """
-        pass
+        fs = gridfs.GridFSBucket(self._db, collection_name)
+        file = self.get_files_from_collection(collection_name, {"_id": file_id}).next()
+        fs.delete(file_id)
+        print(f"Successfully deleted {file['filename']}")
+
+    def get_files_from_collection(self, collection_name: str, collection_filter: Mapping[str, Any]) -> Cursor:
+        _collection_name = f"{collection_name}.files"
+        collection = self._db[_collection_name]
+
+        cursor = collection.find(collection_filter)
+
+        return cursor
 
     def get_video_from_collection(self, collection_name: str,
                                   collection_filter: Mapping[str, Any],
-                                  chunk_size_bytes: int = 261120) -> List[Mapping[str, bytes]]:
+                                  chunk_size_bytes: int = 261120,
+                                  into_files: bool = False) -> List[Mapping[str, bytes]]:
         """
         Given the collection_filter, it grabs all the videos matching the filter. However, if given an empty mapping,
         it will return all videos within the Collection
         :param collection_filter: the filter we want (see below for examples)
         :param collection_name: the name of the collection
         :param chunk_size_bytes: the size of the bytes in bits
+        :param into_files: set to True to transform the bytes into a file base on 'filename' in the collection.
+                            default is False
         :return: returns a list of contents representing each file content
 
         EXAMPLES:
@@ -178,11 +199,7 @@ class DataPool:
         collection_filter = {'chunkSize': 261120} grabs all files with chunk sizes of 255 KB
         collection_filter = {"_id": file_id} where file_id is a BSON object ID
         """
-        # first we go to the file collection
-        _collection_name = f"{collection_name}.files"
-        collection = self._db[_collection_name]
-
-        cursor = collection.find(collection_filter)
+        cursor = self.get_files_from_collection(collection_name, collection_filter)
         fs = gridfs.GridFSBucket(self._db, collection_name, chunk_size_bytes)
 
         file_contents = []
@@ -190,46 +207,38 @@ class DataPool:
         for document in cursor:
             _id = document["_id"]
             filename = document["filename"]
-            file = open("temp", "wb+")
+
+            file = open(filename if into_files else "temp", "wb+")
             fs.download_to_stream(_id, file)
+
             file.seek(0)
             file_contents.append({filename: file.read()})
             file.close()
-        os.remove("temp")
+
+        if not into_files:
+            os.remove("temp")
+
         return file_contents
 
 
 if __name__ == '__main__':
     pool = DataPool()
-    # pool.add_to_collection(
-    #     collection_name="TEST",
-    #     items=[{
-    #         "_id": "hello",
-    #         "information": "No"
-    #     },
-    #     ]
-    # )
-    # pool.delete_from_collection(
-    #     collection_name="TEST",
-    #     field="dsad",
-    #     value="dsada"
-    # )
-    # pool.add_video_to_collection("Videos")
-    # cursor = pool.get_video_from_collection({}, "Videos")
-    # for doc in cursor:
-    #     print(doc)
-    # pool.get_most_recent_entry("Reddit")
-    # pool.add_to_collection("Yes", [
-    #     {"hello": "yes"},
-    #     {"hello": "no"}
-    # ])
-    # collection_name = "hello_testing"
-    # filename = "test"
-    # file_dir = "../../final_videos/hello_testing.mp4"
-    # file_id = pool.add_video_to_collection(collection_name=collection_name, filename=filename, file_dir=file_dir)
+
+    # # delete everything from the collection
+    # collection_name = "test"
+    # files = pool.get_files_from_collection(collection_name, {})
     #
-    # print(file_id)
-    # print(type(file_id))
+    # for file in files:
+    #     pprint.pprint(file)
+    #     pool.delete_video_from_collection(collection_name, file["_id"])
+    # file_dir = "../../final_videos/hello_testing.mp4"
+    # try:
+    #     file_id = pool.add_video_to_collection(collection_name=collection_name, file_dir=file_dir)
+    #
+    #     print(file_id)
+    #     print(type(file_id))
+    # except ValueError as e:
+    #     print(e)
 
     # file_contents = pool.get_video_from_collection(collection_name, {})
     #
@@ -238,5 +247,18 @@ if __name__ == '__main__':
     #     file = open(filename, "wb+")
     #     file.write(content)
     #     file.close()
+    # cursor = pool.get_files_from_collection(collection_name, {})
+    # file_contents = pool.get_video_from_collection(
+    #     collection_name,
+    #     {"filename": "hello_testing.mp4"},
+    #     into_files=True)
+
+    # for document in cursor:
+    #     print(document)
+    #
+    # for content in file_contents:
+    #     for key, value in content.items():
+    #         print(value)
+    #         print(key)
 
 
