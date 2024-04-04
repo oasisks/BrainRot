@@ -89,6 +89,9 @@ class Audio:
         return words, times
 
 
+#issues with dollar and / still
+
+
 # changes the text into a usable transcript
 # takes text
 # returns the transcript that can be visibly used
