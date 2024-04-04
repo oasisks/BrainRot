@@ -31,7 +31,15 @@ def dummyBrainrotMaker():
 
 #placed the brainrot as background
 def dummyCompiler(post: VideoClip, brainrot):
-    return CompositeVideoClip([brainrot, post], size=screensize).set_duration(post.duration)
+    dur = post.duration
+    if dur > 90:
+        raise Exception("too long")
+
+    if dur > 60:
+        post.fx(vfx.speedx, dur / 60)
+        dur = 60
+
+    return CompositeVideoClip([brainrot, post], size=screensize).set_duration(dur)
 
 #main
 if __name__ == '__main__':
@@ -57,4 +65,7 @@ if __name__ == '__main__':
         clip.write_videofile(VIDEO_DIR + USERNAME + "_" + id + ".mp4", fps = 60)
     except Exception as E: 
         raise E
+    
+    #upload video to datapool
+    
 
