@@ -20,7 +20,7 @@ class Audio:
     # returns name of file
     def generateAudio(self, text: str, filename: str) -> str:
         print("Generating audio")
-        generated = generate(api_key=self._API, text=text, voice=self._voice, model="eleven_monolingual_v1")
+        generated = generate(api_key=self._API, text=text, voice=self._voice, model="eleven_multilingual_v1")
         save(generated, self._heading + "_" + filename + '.mp3')
         return self._heading + "_" + filename + '.mp3'
 
@@ -76,12 +76,12 @@ class Audio:
         words = []
         lastend = 0
 
-        for start, end, word in zip(starts, ends, transcript):
+        for start, end, word in zip(starts, ends, final):
             words.append(None)
             times.append(start - lastend)
 
             words.append(word)
-            duration = max(end-start, 0.1)
+            duration = max(end-start, 0.25)
             times.append(duration)
 
             lastend = start + duration
@@ -312,5 +312,3 @@ def changeWords(text: str) -> List[str]:
     return ["".join(filter(str.isalpha, word)) for word in numbers if len("".join(filter(str.isalpha, word)))]
 
 
-
-print(changeWords("30"))
