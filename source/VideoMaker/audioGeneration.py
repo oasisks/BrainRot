@@ -19,6 +19,7 @@ class Audio:
     # saves generated audio to file
     # returns name of file
     def generateAudio(self, text: str, filename: str) -> str:
+        print("Generating audio")
         generated = generate(api_key=self._API, text=text, voice=self._voice, model="eleven_monolingual_v1")
         save(generated, self._heading + "_" + filename + '.mp3')
         return self._heading + "_" + filename + '.mp3'
@@ -28,6 +29,7 @@ class Audio:
     # https://pytorch.org/audio/stable/tutorials/ctc_forced_alignment_api_tutorial.html
     # WIP
     def analyzeAudio(self, text: str, filename: str) -> Tuple[List[str], List[float]]:
+        print("forced alignment")
         waveform, sample_rate = torchaudio.load(filename)
         final = changeWords(text)
         transcript = [word.lower() for word in final]

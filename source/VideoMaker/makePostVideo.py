@@ -11,6 +11,7 @@ class MakePostVideo:
         self._screensize = screensize
     
     def makePostVideo(self, post: PostData) -> VideoClip:
+        print("making post video")
         #creates the file ID
         fileID = post.source + "_" + post.id
         
@@ -31,6 +32,7 @@ class MakePostVideo:
     #audio file names are based on the id
     #text color is based on color
     def textToVideo(self, text: str, id: str, color: str) -> VideoClip:
+        print("adding text")
         #get and analyze audio
         audio = self._makeAudio(text, id)
         words, breaks = self._analyzeAudio(text, audio)
