@@ -27,18 +27,19 @@ def dummyPost(title, text, id):
 
 #returns the resized and centered brainrot video
 def dummyBrainrotMaker():
-    return VideoFileClip("brainrot_videos/new_format_shorts.mp4", audio=False).resize(height = screensize[1]).set_position("center")
+    return VideoFileClip("brainrot_videos/MC_Video_1.mp4", audio=False).resize(height = screensize[1]).set_position("center")
 
 #placed the brainrot as background
 def dummyCompiler(post: VideoClip, brainrot):
     dur = post.duration
+    print("duration: ", dur)
     if dur > 90:
         raise Exception("too long")
 
     if dur > 60:
         post.fx(vfx.speedx, dur / 60)
         dur = 60
-
+    
     return CompositeVideoClip([brainrot, post], size=screensize).set_duration(dur)
 
 #main
@@ -51,21 +52,20 @@ if __name__ == '__main__':
 
     #get necessary information
     load_dotenv()
-    post = RedditPost()
     dataPool = DataPool()
+    post = RedditPost(dataPool)
     audio = Audio(os.getenv("ELEVEN_API_KEY"), VOICE_ID, "temp_audio/", USERNAME)
 
     #create the appropriate makers
     postMaker = MakePostVideo(audio.generateAudio, audio.analyzeAudio, screensize)
-    videoMaker = VideoMaker(post.getPost, postMaker.makePostVideo, dummyBrainrotMaker, dummyCompiler)
+    videoMaker = VideoMaker(dummyPost, postMaker.makePostVideo, dummyBrainrotMaker, dummyCompiler)
 
     #try to make the video
     try:
-        clip, id = videoMaker.makeVideo(subreddit, dataPool.get_most_recent_entry(collection))
+        clip, id = videoMaker.makeVideo(title, message, "tester")
         clip.write_videofile(VIDEO_DIR + USERNAME + "_" + id + ".mp4", fps = 60)
+        dataPool.add_video_to_collection(collection_name="testing", file_dir=VIDEO_DIR + USERNAME + "_" + id + ".mp4")
     except Exception as E: 
         raise E
-    
-    #upload video to datapool
     
 

@@ -10,7 +10,7 @@ from source.DataPool.DataPool import DataPool
 
 
 class RedditPost:
-    def __init__(self):
+    def __init__(self, dataPool: DataPool):
         load_dotenv()
         client_id = os.getenv("CLIENT_ID")
         client_secret = os.getenv("CLIENT_SECRET")
@@ -22,7 +22,7 @@ class RedditPost:
             user_agent=user_agent
         )
 
-        self._datapool = DataPool()
+        self._datapool = dataPool
         self._collection_name = "Reddit"
 
     def getPost(self, subreddit_name="", after: str | None = None, info="hot", limit=10, url: str = "") -> PostData | None:
@@ -91,6 +91,9 @@ class RedditPost:
                     }
                 ])
                 data = PostData(author, title, text, data_id, subreddit_name, [], replies)
+                if len(text) > 2500:
+                    print("too long")
+                    continue
                 return data
             except AttributeError as e:
                 return data

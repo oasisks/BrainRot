@@ -216,6 +216,8 @@ def changeWords(text: str) -> List[str]:
             return [teens[numstr]]
         if numstr[:1] == "0":
             return [ones[numstr[1]]]
+        if numstr[1:] == "0":
+            return [tens[numstr[0]]]
         return [tens[numstr[0]], ones[numstr[1]]]
     
     #convers 3 digit numbers to words
@@ -308,3 +310,7 @@ def changeWords(text: str) -> List[str]:
     #forces all other characters out
     #this might change based on performance
     return ["".join(filter(str.isalpha, word)) for word in numbers if len("".join(filter(str.isalpha, word)))]
+
+
+
+print(changeWords("30"))
