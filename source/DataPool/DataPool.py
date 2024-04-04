@@ -181,7 +181,7 @@ class DataPool:
     def get_videos_from_collection(self, collection_name: str,
                                   collection_filter: Mapping[str, Any],
                                   chunk_size_bytes: int = 261120,
-                                  into_files: bool = False) -> List[Mapping[str, bytes]]:
+                                  into_files: bool = False) -> Mapping[str, bytes]:
         """
         Given the collection_filter, it grabs all the videos matching the filter. However, if given an empty mapping,
         it will return all videos within the Collection
@@ -202,7 +202,7 @@ class DataPool:
         cursor = self.get_files_from_collection(collection_name, collection_filter)
         fs = gridfs.GridFSBucket(self._db, collection_name, chunk_size_bytes)
 
-        file_contents = []
+        file_contents = {}
         # iterate through all the cursor and return the file streams
         for document in cursor:
             _id = document["_id"]
@@ -212,7 +212,7 @@ class DataPool:
             fs.download_to_stream(_id, file)
 
             file.seek(0)
-            file_contents.append({filename: file.read()})
+            file_contents[filename] = file.read()
             file.close()
 
         if not into_files:

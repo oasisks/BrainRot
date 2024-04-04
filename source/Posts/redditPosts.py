@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pprint
 import praw
+import validators
 from dotenv import load_dotenv
 import os
 
@@ -41,6 +42,8 @@ class RedditPost:
         The replies is a trees
         """
         if url:
+            if not validators.url(url):
+                raise ValueError("Invalid URL format")
             tokens = url.split("/")
             submission_id = tokens[6]
             submission = self.reddit.submission(submission_id)
@@ -127,8 +130,9 @@ class RedditPost:
 
 
 if __name__ == '__main__':
-    redditPost = RedditPost()
-    data = redditPost.getPost("pettyrevenge")
-    pprint.pprint(data)
-    # data = redditPost.getPost(url="https://www.reddit.com/r/amiwrong/comments/1boff73/my_girlfriend_cheated_on_me_with_my_brother_and/")
+    datapool = DataPool()
+    redditPost = RedditPost(datapool)
+    # data = redditPost.getPost("pettyrevenge")
     # pprint.pprint(data)
+    data = redditPost.getPost(url="https://www.reddit.com/r/amiwrong/comments/1boff73/my_girlfriend_cheated_on_me_with_my_brother_and/")
+    pprint.pprint(data)
