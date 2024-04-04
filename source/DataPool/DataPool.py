@@ -181,7 +181,8 @@ class DataPool:
     def get_videos_from_collection(self, collection_name: str,
                                   collection_filter: Mapping[str, Any],
                                   chunk_size_bytes: int = 261120,
-                                  into_files: bool = False) -> Mapping[str, bytes]:
+                                  into_files: bool = False,
+                                  file_dir: str = os.getcwd()) -> Mapping[str, bytes]:
         """
         Given the collection_filter, it grabs all the videos matching the filter. However, if given an empty mapping,
         it will return all videos within the Collection
@@ -190,6 +191,8 @@ class DataPool:
         :param chunk_size_bytes: the size of the bytes in bits
         :param into_files: set to True to transform the bytes into a file base on 'filename' in the collection.
                             default is False
+        :param file_dir: if the directory is set, it will store the file in that file directory (this is strictly a
+                        directory)
         :return: returns a list of contents representing each file content
 
         EXAMPLES:
@@ -207,8 +210,8 @@ class DataPool:
         for document in cursor:
             _id = document["_id"]
             filename = document["filename"]
-
-            file = open(filename if into_files else "temp", "wb+")
+            path_name = os.path.join(file_dir, filename)
+            file = open(path_name if into_files else "temp", "wb+")
             fs.download_to_stream(_id, file)
 
             file.seek(0)
@@ -223,7 +226,7 @@ class DataPool:
 
 if __name__ == '__main__':
     pool = DataPool()
-
+    # pool.get_videos_from_collection("data", {})
     # # delete everything from the collection
     # collection_name = "test"
     # files = pool.get_files_from_collection(collection_name, {})
