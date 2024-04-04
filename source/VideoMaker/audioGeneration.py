@@ -7,34 +7,31 @@ from elevenlabs import generate, save
 from unidecode import unidecode
 import re
 
-#might take a write function instead of dir and user
-#func returns AudioClip
-#discuss with hao
+# might take a write function instead of dir and user
+# func returns AudioClip
+# discuss with hao
 class Audio:
     def __init__(self, API: str, voice: str, dir: str, user: str) -> None:
         self._API = API
         self._voice = voice
         self._heading = dir + user
 
-    #saves generated audio to file
-    #returns name of file
+    # saves generated audio to file
+    # returns name of file
     def generateAudio(self, text: str, filename: str) -> str:
         generated = generate(api_key=self._API, text=text, voice=self._voice, model="eleven_monolingual_v1")
         save(generated, self._heading + "_" + filename + '.mp3')
         return self._heading + "_" + filename + '.mp3'
-    
 
-    #forced alignment
-    #copied from torch API 
-    #https://pytorch.org/audio/stable/tutorials/ctc_forced_alignment_api_tutorial.html
-    #WIP
+    # forced alignment
+    # copied from torch API
+    # https://pytorch.org/audio/stable/tutorials/ctc_forced_alignment_api_tutorial.html
+    # WIP
     def analyzeAudio(self, text: str, filename: str) -> Tuple[List[str], List[float]]:
         waveform, sample_rate = torchaudio.load(filename)
         final = changeWords(text)
         transcript = [word.lower() for word in final]
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        
-
 
         bundle = torchaudio.pipelines.MMS_FA
         model = bundle.get_model(with_star=False).to(device)
@@ -53,7 +50,6 @@ class Audio:
             scores = scores.exp()  # convert back to probability
             return alignments, scores
 
-
         aligned_tokens, alignment_scores = align(emission, tokenized_transcript)
         token_spans = F.merge_tokens(aligned_tokens, alignment_scores)
 
@@ -66,9 +62,7 @@ class Audio:
                 i += l
             return ret
 
-
         word_spans = unflatten(token_spans, [len(word) for word in transcript])
-        
 
         num_frames = emission.size(1)
         ratio = waveform.size(1) / num_frames
@@ -93,17 +87,14 @@ class Audio:
         return words, times
 
 
-
-
-
-#changes the text into a usable transcript
-#takes text
-#returns the transcript that can be visibly used
+# changes the text into a usable transcript
+# takes text
+# returns the transcript that can be visibly used
 def changeWords(text: str) -> List[str]: 
-    #attempts to convert characters to a-Z
+    # attempts to convert characters to a-Z
     split = unidecode(text).split()
 
-    #split numbers and words
+    # split numbers and words
     numsplit: List[str] = []
     isNum = False
     for word in split:
@@ -132,7 +123,7 @@ def changeWords(text: str) -> List[str]:
             dollars.append(word)
             continue
 
-        #dollar with number
+        # dollar with number
         if re.search("[0-9]", word):
             split = word.split("$")
             if len(split) == 2:
@@ -143,7 +134,7 @@ def changeWords(text: str) -> List[str]:
                 addDollar = True
                 continue
 
-        #other dollar
+        # other dollar
         split = word.split("$")
         for i, new in enumerate(split):
             if new == '':
@@ -154,7 +145,7 @@ def changeWords(text: str) -> List[str]:
             else:
                 dollars.append(new)
 
-    #trailing dollar
+    # trailing dollar
     if addDollar:
         dollars.append("dollar")
         

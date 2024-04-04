@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pprint
 import praw
+from datetime import datetime
 from dotenv import load_dotenv
 import os
 
@@ -26,7 +27,7 @@ class RedditPost:
         self._datapool = DataPool()
         self._collection_name = "Reddit"
 
-    def getPost(self, subreddit_name="", info="hot", limit=10, after: str | None = None) -> PostData | None:
+    def getPost(self, subreddit_name="", after: str | None = None, info="hot", limit=10, ) -> PostData | None:
         """
         The getPost function will indefinitely go down a subreddit until it returns a submission.
         It does this by keeping track of the last ID the function has seen.
@@ -61,6 +62,7 @@ class RedditPost:
                 replies = self._get_comments(submission.comments)
                 id = f"{subreddit_name}_{submission.id}"
                 most_recent_id = f"t3_{submission.id}"
+
                 # first check if the id already exists
                 collection = self._datapool.get_from_collection(self._collection_name, {"_id": id})
                 count = len([doc for doc in collection])
@@ -76,11 +78,11 @@ class RedditPost:
                 ])
                 data = PostData(author, title, text, id, subreddit_name, [], replies)
                 return data
-            except AttributeError as E:
+            except AttributeError as e:
                 return data
 
         # if I am here and I still haven't gotten a valid data, then we query again
-        data = self.getPost(subreddit_name, info, limit, most_recent_id)
+        data = self.getPost(subreddit_name, most_recent_id, info, limit)
         return data
 
     def _get_comments(self, comments: praw.models.comment_forest.CommentForest, parent: Reply | None = None):
@@ -92,6 +94,9 @@ class RedditPost:
         """
         replies = []
         for comment in comments:
+            # we don't necessarily care about more comments
+            if isinstance(comment, praw.reddit.models.MoreComments):
+                continue
             user = comment.author.name if comment.author is not None else None
             content = comment.body
             images = []

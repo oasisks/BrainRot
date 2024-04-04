@@ -39,6 +39,7 @@ if __name__ == '__main__':
     subreddit = "pettyrevenge"
     title = "Testing Timing"
     message = "$200 gift éóñ !! card"
+    collection = "Reddit"
 
     #get necessary information
     load_dotenv()
@@ -52,7 +53,7 @@ if __name__ == '__main__':
 
     #try to make the video
     try:
-        clip, id = videoMaker.makeVideo(subreddit)
+        clip, id = videoMaker.makeVideo(subreddit, dataPool.get_most_recent_entry(collection))
         clip.write_videofile(VIDEO_DIR + USERNAME + "_" + id + ".mp4", fps = 60)
     except Exception as E: 
         raise E
