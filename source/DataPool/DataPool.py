@@ -178,7 +178,7 @@ class DataPool:
 
         return cursor
 
-    def get_video_from_collection(self, collection_name: str,
+    def get_videos_from_collection(self, collection_name: str,
                                   collection_filter: Mapping[str, Any],
                                   chunk_size_bytes: int = 261120,
                                   into_files: bool = False) -> List[Mapping[str, bytes]]:
