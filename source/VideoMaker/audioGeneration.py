@@ -125,17 +125,16 @@ def changeWords(text: str) -> List[str]:
     for i, word in enumerate(numsplit):
         #do nothing if no dollar
         if re.search("[$]", word) is None:
-            dollars.append(word)
             #dollar with units
             if addDollar and (not i < len(split) - 1 or not split[i+1].lower() in units):
                 dollars.append("dollars")
                 addDollar = False
+            dollars.append(word)
             continue
 
         #dollar with number
         if re.search("[0-9]", word):
             split = word.split("$")
-            print(split)
             if len(split) == 2:
                 if split[0] == '':
                     dollars.append(split[1])
@@ -158,7 +157,6 @@ def changeWords(text: str) -> List[str]:
     #trailing dollar
     if addDollar:
         dollars.append("dollar")
-        
         
     #deal with symbols
     #does not account for math equations
@@ -191,7 +189,6 @@ def changeWords(text: str) -> List[str]:
         for new in curWords:
             sym.append(new)
 
-    
     #deal with decimals
     #does not account for websites
     decimals: List[str] = []
@@ -232,6 +229,9 @@ def changeWords(text: str) -> List[str]:
             return readTeen(numstr)
         if numstr[0] != "0":
             words.append(ones[numstr[0]])
+            if numstr[1:3] == "00":
+                words.append("hundred")
+                return words
         for word in readTeen(numstr[1:]):
             words.append(word)
         return words
@@ -308,6 +308,7 @@ def changeWords(text: str) -> List[str]:
                 numbers.append(numWord)
             if index > 0 and index < 5:
                 numbers.append(units[index - 1])
-               
+    
     #forces all other characters out
+    #this might change based on performance
     return ["".join(filter(str.isalpha, word)) for word in numbers if len("".join(filter(str.isalpha, word)))]

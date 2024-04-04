@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
     #try to make the video
     try:
-        clip, id = videoMaker.makeVideo(subreddit, str(dataPool.getMostRecentEntry().__id))
+        clip, id = videoMaker.makeVideo(subreddit)
         clip.write_videofile(VIDEO_DIR + USERNAME + "_" + id + ".mp4", fps = 60)
     except Exception as E: 
         raise E

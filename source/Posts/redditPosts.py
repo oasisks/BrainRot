@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 import os
 
 
-from source.PostData import PostData, Reply
-from source.DataPool.DataPool import DataPool
+from PostData import PostData, Reply
+from DataPool.DataPool import DataPool
 
 
 class RedditPost:
