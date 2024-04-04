@@ -2,13 +2,11 @@ from __future__ import annotations
 
 import pprint
 import praw
-from datetime import datetime
 from dotenv import load_dotenv
 import os
 
-
-from PostData import PostData, Reply
-from DataPool.DataPool import DataPool
+from source.PostData import PostData, Reply
+from source.DataPool.DataPool import DataPool
 
 
 class RedditPost:
@@ -27,7 +25,7 @@ class RedditPost:
         self._datapool = DataPool()
         self._collection_name = "Reddit"
 
-    def getPost(self, subreddit_name="", after: str | None = None, info="hot", limit=10, ) -> PostData | None:
+    def getPost(self, subreddit_name="", after: str | None = None, info="hot", limit=10, url: str = "") -> PostData | None:
         """
         The getPost function will indefinitely go down a subreddit until it returns a submission.
         It does this by keeping track of the last ID the function has seen.
@@ -38,9 +36,25 @@ class RedditPost:
         :param subreddit_name: the subreddit we are interested in
         :param limit: The limit per request
         :param after: A string to signify after what submission do we want to look for (i.e., t3_2md312s)
+        :param url: if given, then getPost will strictly return the post and will not save it to the database
         :return: return a Post Data that contains the title, text, username, images, and replies
         The replies is a trees
         """
+        if url:
+            tokens = url.split("/")
+            submission_id = tokens[6]
+            submission = self.reddit.submission(submission_id)
+
+            # meta data
+            author = submission.author.name
+            title = submission.title
+            text = submission.selftext
+            replies = self._get_comments(submission.comments)
+            data_id = f"{subreddit_name}_{submission.id}"
+
+            data = PostData(author, title, text, data_id, subreddit_name, [], replies)
+            return data
+
         subreddit = self.reddit.subreddit(subreddit_name)
         function_type = {"hot": subreddit.hot, "new": subreddit.new, "top": subreddit.top}
 
@@ -60,11 +74,11 @@ class RedditPost:
                 title = submission.title
                 text = submission.selftext
                 replies = self._get_comments(submission.comments)
-                id = f"{subreddit_name}_{submission.id}"
+                data_id = f"{subreddit_name}_{submission.id}"
                 most_recent_id = f"t3_{submission.id}"
 
                 # first check if the id already exists
-                collection = self._datapool.get_from_collection(self._collection_name, {"_id": id})
+                collection = self._datapool.get_from_collection(self._collection_name, {"_id": data_id})
                 count = len([doc for doc in collection])
 
                 if count > 0:
@@ -73,10 +87,10 @@ class RedditPost:
                 # next if we know it does not exist, we add it to the db
                 self._datapool.add_to_collection(self._collection_name, [
                     {
-                        "_id": id,
+                        "_id": data_id,
                     }
                 ])
-                data = PostData(author, title, text, id, subreddit_name, [], replies)
+                data = PostData(author, title, text, data_id, subreddit_name, [], replies)
                 return data
             except AttributeError as e:
                 return data
@@ -113,3 +127,5 @@ if __name__ == '__main__':
     redditPost = RedditPost()
     data = redditPost.getPost("pettyrevenge")
     pprint.pprint(data)
+    # data = redditPost.getPost(url="https://www.reddit.com/r/amiwrong/comments/1boff73/my_girlfriend_cheated_on_me_with_my_brother_and/")
+    # pprint.pprint(data)
