@@ -20,34 +20,38 @@ makeBrainrotVideoCall = Callable[[], VideoClip]
 compileVideoCall = Callable[[VideoClip, VideoClip], VideoClip]
 
 class VideoMaker:
-    def __init__(self, getPost: getPostCall, makePostVideo: makePostVideoCall, makeBrainrotVideo: makeBrainrotVideoCall, compileVideo: compileVideoCall) -> None:
+    def __init__(self, getPost: getPostCall, makePostVideo: makePostVideoCall, makeBrainrotVideo: makeBrainrotVideoCall, compileVideo: compileVideoCall, video_dir: str, username: str) -> None:
         self._getPost = getPost
         self._makePostVideo = makePostVideo
         self._makeBrainrotVideo = makeBrainrotVideo
         self._compileVideo = compileVideo
+        self._video_dir = video_dir
+        self._username = username
 
-    def makeVideo(self, *args) -> List[Tuple[VideoClip, str]]:
+    def makeVideo(self, *args) -> List[str]:
         post = self._getPost(*args)
         post.text = textfilter(post.text)
         post.title = textfilter(post.title)
 
         parts = splitpost(post)
-        videos = [(VideoClip(), str())] * len(parts)
-        for index, part in enumerate(parts):
-            print("making video number", index, part)
+        ids: List[str] = []
+        for part in parts:
+            print("making video number", part)
             postVideo = self._makePostVideo(part)
             brainrotVideo = self._makeBrainrotVideo()
-            videos[index] = (self._compileVideo(postVideo, brainrotVideo), part.id)
-        return videos
+            clip = self._compileVideo(postVideo, brainrotVideo)
+            clip.write_videofile(self._video_dir + self._username + "_" + part.id + ".mp4", fps = 60)
+            ids.append(part.id)
+        return ids
     
 def textfilter(text: str) -> str:
     return text
 
 def splitpost(post: PostData) -> List[PostData]:
     #word tolerance
-    min = 50
-    max = 200
-    lowtol = 40
+    min = 5
+    max = 100
+    lowtol = 2
     hightol = 200
     if len(post.text.split()) < max:
         return [post]
@@ -70,7 +74,7 @@ def splitpost(post: PostData) -> List[PostData]:
 
 
 
-def splitter(text: str, token: str = "\n", min: int = 50, max: int = 200) -> Tuple[List[str], int]:
+def splitter(text: str, token: str = "\n", min: int = 50, max: int = 200) -> Tuple[List[str], int, int]:
     blocks = []
     newblocks = text.split(sep = token)
     i = 0

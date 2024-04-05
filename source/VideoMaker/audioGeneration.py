@@ -28,8 +28,9 @@ class Audio:
     # copied from torch API
     # https://pytorch.org/audio/stable/tutorials/ctc_forced_alignment_api_tutorial.html
     # WIP
+    # issues with new sentence
     def analyzeAudio(self, text: str, filename: str) -> Tuple[List[str], List[float]]:
-        print("forced alignment")
+
         waveform, sample_rate = torchaudio.load(filename)
         final = changeWords(text)
         transcript = [word.lower() for word in final]

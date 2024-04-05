@@ -36,6 +36,7 @@ class MakePostVideo:
         #get and analyze audio
         audio = self._makeAudio(text, id)
         words, breaks = self._analyzeAudio(text, audio)
+        
         #get words and colors
         colors = [color if word is not None else 'transparent' for word in words]
         words = [word if word is not None else 'a' for word in words]
