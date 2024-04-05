@@ -94,7 +94,8 @@ class RedditPost:
                     }
                 ])
                 data = PostData(author, title, text, data_id, subreddit_name, [], replies)
-                if len(text) > 2500:
+                #to be removed on parts completion
+                if len(text.split()) > 200:
                     print("too long")
                     continue
                 return data
