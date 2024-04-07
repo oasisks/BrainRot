@@ -3,9 +3,10 @@ from typing import List, Tuple
 import torchaudio
 import torch
 import torchaudio.functional as F
-from elevenlabs import generate, save
+from elevenlabs import generate, save, core
 from unidecode import unidecode
 import re
+from time import sleep
 
 # might take a write function instead of dir and user
 # func returns AudioClip
@@ -15,12 +16,24 @@ class Audio:
         self._API = API
         self._voice = voice
         self._heading = dir + user
+        self._device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self._bundle = torchaudio.pipelines.MMS_FA
+        self._model = self._bundle.get_model(with_star=False).to(self._device)
 
     # saves generated audio to file
     # returns name of file
     def generateAudio(self, text: str, filename: str) -> str:
         print("Generating audio")
-        generated = generate(api_key=self._API, text=text, voice=self._voice, model="eleven_multilingual_v1")
+        while True:
+            try:
+                generated = generate(api_key=self._API, text=text, voice=self._voice, model="eleven_multilingual_v1")
+                break
+            except Exception as E:
+                print(E.status_code)
+                if E.status_code == 429:
+                    sleep(5)
+                    continue
+                raise E
         save(generated, self._heading + "_" + filename + '.mp3')
         return self._heading + "_" + filename + '.mp3'
 
@@ -34,19 +47,16 @@ class Audio:
         waveform, sample_rate = torchaudio.load(filename)
         final = changeWords(text)
         transcript = [word.lower() for word in final]
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        bundle = torchaudio.pipelines.MMS_FA
-        model = bundle.get_model(with_star=False).to(device)
+        
         with torch.inference_mode():
-            emission, _ = model(waveform.to(device))
+            emission, _ = self._model(waveform.to(self._device))
 
-        DICTIONARY = bundle.get_dict(star=None)
+        DICTIONARY = self._bundle.get_dict(star=None)
         
         tokenized_transcript = [DICTIONARY[c] for word in transcript for c in word.lower()]
 
         def align(emission, tokens):
-            targets = torch.tensor([tokens], dtype=torch.int32, device=device)
+            targets = torch.tensor([tokens], dtype=torch.int32, device=self._device)
             alignments, scores = F.forced_align(emission, targets, blank=0)
 
             alignments, scores = alignments[0], scores[0]  # remove batch dimension for simplicity

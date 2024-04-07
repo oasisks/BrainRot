@@ -94,10 +94,6 @@ class RedditPost:
                     }
                 ])
                 data = PostData(author, title, text, data_id, subreddit_name, [], replies)
-                #to be removed on parts completion
-                if len(text.split()) > 200:
-                    print("too long")
-                    continue
                 return data
             except AttributeError as e:
                 return data

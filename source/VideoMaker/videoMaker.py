@@ -34,11 +34,13 @@ class VideoMaker:
         post.title = textfilter(post.title)
 
         parts = splitpost(post)
+        print("splitting into " + str(len(parts)) + " parts")
+        
         ids: List[str] = []
-        for part in parts:
-            print("making video number", part)
-            postVideo = self._makePostVideo(part)
+        for number, part in enumerate(parts):
+            print("making video number", number + 1)
             brainrotVideo = self._makeBrainrotVideo()
+            postVideo = self._makePostVideo(part)
             clip = self._compileVideo(postVideo, brainrotVideo)
             clip.write_videofile(self._video_dir + self._username + "_" + part.id + ".mp4", fps = 60)
             ids.append(part.id)
@@ -49,10 +51,10 @@ def textfilter(text: str) -> str:
 
 def splitpost(post: PostData) -> List[PostData]:
     #word tolerance
-    min = 5
-    max = 100
-    lowtol = 2
-    hightol = 200
+    min = 50
+    max = 180 - len(post.title.split())
+    lowtol = 40
+    hightol = 200 - len(post.title.split())
     if len(post.text.split()) < max:
         return [post]
     
@@ -62,7 +64,7 @@ def splitpost(post: PostData) -> List[PostData]:
     #if fail try split by sentence
     if lowest < lowtol or highest > hightol:
         newblocks, newlowest, newhighest = splitter(post.text, token=". ", min = min, max = max)
-        if newlowest >= lowest and newhighest <= highest:
+        if (newlowest >= lowest and newhighest <= highest) or (newlowest >= lowtol and newhighest <= hightol):
             blocks = newblocks
     
     #make post per thing

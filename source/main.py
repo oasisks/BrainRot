@@ -17,7 +17,7 @@ screensize = (1080, 1920)
 #constants that can be changed
 VIDEO_DIR = "final_videos/"
 USERNAME = "hello"
-VOICE_ID = "Nicole"
+VOICE_ID = "Giovanni"
 
 
 #returns a PostData with given info
@@ -25,8 +25,14 @@ def dummyPost(title, text, id):
     return PostData(title = title, text=text, id=id)
 
 #returns the resized and centered brainrot video
-def dummyBrainrotMaker():
-    return VideoFileClip("brainrot_videos/0404 (2)(1).mp4", audio=False).resize(height = screensize[1]).set_position("center")
+class Brainrot:
+    def __init__(self) -> None:
+        self._start = 60
+    def dummyBrainrotMaker(self):
+        self._start += 65
+        clip: VideoClip = VideoFileClip("brainrot_videos/videoplayback.webm", audio=False).resize(height = screensize[1]).set_position("center")
+        return clip.subclip(self._start, self._start + 60)
+        
 
 #placed the brainrot as background
 def dummyCompiler(post: VideoClip, brainrot):
@@ -53,7 +59,7 @@ if __name__ == '__main__':
     collection = "Reddit"
 
     #message = "Boy do I have the test for you. You've been a good boy Varun. I hope you like this voice Varun."
-
+    #message = "Help."
 
     #title = "Am I wrong for telling my husband the only way I will agree to a paternity test is if he schedules it"
     #message = "I (30f) have been married to my husband (36m) for 5 years. I am currently 4 months pregnant. This wasn't a surprise pregnancy we planned it and actively tried to get pregnant. So, it came out of left field when a few weeks ago, my husband told me he wanted a paternity test. I asked him how he or why he thinks I am cheating on him. He said he didn't think I was. But that makes absolutely no sense. I asked him to explain how this child could not be his if he is the only person I slept with and I didn't cheat on him. He had no answer for that. I was a mess for a few days afterward. Once I calmed down, I told him that if he wanted to get the test, then he could schedule it and tell me where and when to be there. He asked me if I could be the one to make the appointment."
@@ -63,16 +69,18 @@ if __name__ == '__main__':
     dataPool = DataPool()
     post = RedditPost(dataPool)
     audio = Audio(os.getenv("ELEVEN_API_KEY"), VOICE_ID, "temp_audio/", USERNAME)
+    brainrot = Brainrot()
 
     #create the appropriate makers
     #videomaker should take in as parameters directory and username, so we can render videos in there
     postMaker = MakePostVideo(audio.generateAudio, audio.analyzeAudio, screensize)
-    #videoMaker = VideoMaker(post.getPost, postMaker.makePostVideo, dummyBrainrotMaker, dummyCompiler, VIDEO_DIR, USERNAME) #this is for actually getting the post
-    videoMaker = VideoMaker(dummyPost, postMaker.makePostVideo, dummyBrainrotMaker, dummyCompiler, VIDEO_DIR, USERNAME) #this is for manually inputting text
+    videoMaker = VideoMaker(post.getPost, postMaker.makePostVideo, brainrot.dummyBrainrotMaker, dummyCompiler, VIDEO_DIR, USERNAME) #this is for actually getting the post
+    #videoMaker = VideoMaker(dummyPost, postMaker.makePostVideo, brainrot.dummyBrainrotMaker, dummyCompiler, VIDEO_DIR, USERNAME) #this is for manually inputting text
     #try to make the video
     try:
+        videos = videoMaker.makeVideo(subreddit)
         #videos = videoMaker.makeVideo("", None, "hot", 10, "https://www.reddit.com/r/amiwrong/comments/1boff73/my_girlfriend_cheated_on_me_with_my_brother_and/")
-        videos = videoMaker.makeVideo(title, message, "part test")
+        #videos = videoMaker.makeVideo(title, message, "part test")
         for id in videos:
             dataPool.add_video_to_collection(collection_name="testing", file_dir=VIDEO_DIR + USERNAME + "_" + id + ".mp4")
     except Exception as E: 
