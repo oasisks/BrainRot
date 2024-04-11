@@ -8,7 +8,7 @@ from DataPool.dataPool import DataPool
 from moviepy.editor import *
 from dotenv import load_dotenv
 import os
-
+ 
 #determines screensize
 height = 1080
 length = int(round(height * 9 / 16, -1))
@@ -49,6 +49,7 @@ def dummyCompiler(post: VideoClip, brainrot):
         dur = target
     
     return CompositeVideoClip([brainrot, post], size=screensize).set_duration(dur + endbuffer)
+
 
 #main
 if __name__ == '__main__':
