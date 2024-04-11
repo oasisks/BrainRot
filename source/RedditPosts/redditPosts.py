@@ -5,9 +5,13 @@ import praw
 import validators
 from dotenv import load_dotenv
 import os
+import sys
+
+# to allow access to the source directory
+sys.path.insert(0, '../')
 
 from PostData import PostData, Reply
-from DataPool.DataPool import DataPool
+from DataPool.dataPool import DataPool
 
 
 class RedditPost:
@@ -115,7 +119,7 @@ class RedditPost:
             if isinstance(comment, praw.reddit.models.MoreComments):
                 continue
             user = comment.author.name if comment.author is not None else None
-            content = comment.body
+            content = comment.body.encode()
             images = []
 
             reply = Reply(parent, user, [], content, images)

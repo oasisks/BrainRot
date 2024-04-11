@@ -2,8 +2,8 @@ from PostData import PostData
 from VideoMaker.makePostVideo import MakePostVideo
 from VideoMaker.videoMaker import VideoMaker
 from VideoMaker.audioGeneration import Audio
-from Posts.redditPosts import RedditPost
-from DataPool.DataPool import DataPool
+from RedditPosts.redditPosts import RedditPost
+from DataPool.dataPool import DataPool
 
 from moviepy.editor import *
 from dotenv import load_dotenv
